@@ -3,142 +3,129 @@
 
 
 (function (sandbox) {
+
+    function ArrayReference(base, name) {
+        var optVer = JSON.parse(JSON.stringify(base));
+        var locked = false;
+        var lockedValues = {};
+        var references = {};
+
+        this.push = function(val) {
+          if (!locked && !lockedValues[optVer.length + 1]) {
+              optVer.push(val);
+          }
+        };
+
+        this.pop = function() {
+            if (!locked && !lockedValues[optVer.length - 1]) {
+                optVer.pop();
+            }
+        };
+
+        this.addRef = function(name) {
+            references[name] = true;
+        };
+
+        this.equals = function(val) {
+            return base === val;
+        };
+
+        this.lock = function(num) {
+            if (num >= 0) {
+                lockedValues[num] = true;
+            } else {
+                locked = true;
+            }
+        };
+
+        this.print = function() {
+            console.log("references " + JSON.stringify(references));
+            console.log("opt version " + JSON.stringify(optVer));
+            console.log("locked " + JSON.stringify(locked));
+            console.log("locked values " + JSON.stringify(lockedValues));
+            console.log();
+        };
+
+        this.addRef(name);
+    }
+
     function MyAnalysis () {
         var iidToLocation = sandbox.iidToLocation;
         var Constants = sandbox.Constants;
-        var HOP = Constants.HOP;
-        var sort = Array.prototype.sort;
 
-        var initializedArrays = {};
+        var initArrays = [];
         var stack = [];
-        var report = [];
+        var finished = [];
 
-        this.declare = function(iid, name, val, isArgument, argumentIndex, isCatchParam) {
-            console.log("declare");
-            console.log("name: " + JSON.stringify(name));
-            console.log("val: " + JSON.stringify(val));
-            console.log();
-            this.endExpression();
-        };
-
-        this.putField = function(iid, base, offset, val, isComputed, isOpAssign) {
-            console.log("putField");
-            console.log(JSON.stringify(iid));
-            console.log(JSON.stringify(sandbox.getGlobalIID(iid)));
-            console.log(JSON.stringify(base));
-            console.log(JSON.stringify(offset));
-            console.log(JSON.stringify(val));
-            console.log(JSON.stringify(isComputed));
-            console.log(JSON.stringify(isOpAssign));
-            stack.push({typ: "putField", offset: offset, val: val});
-            console.log();
-        };
-
-        this.getField = function(iid, base, offset, val, isComputed, isOpAssign, isMethodcall) {
-            console.log("getField");
-            console.log("base: " + JSON.stringify(base));
-            console.log("offset: " + JSON.stringify(offset));
-            console.log("val: " + JSON.stringify(val));
-            if (base instanceof Array) {
-                var name = stack[stack.length - 1].name;
-                if (initializedArrays[name] !== undefined) {
-                    initializedArrays[name] = undefined;
-                    console.log("Removed entry from initialized array " + name);
+        var getRef = function(base) {
+            for(var i = 0; i < initArrays.length; i++) {
+                if (initArrays[i].equals(base)) {
+                    return initArrays[i];
                 }
             }
-            console.log();
-            stack.push({typ: "getField", offset: offset});
         };
 
-        this.literal = function(iid, val, hasGetterSetter) {
-            if (val instanceof Array) {
-                console.log("literal");
-                console.log(JSON.stringify(iid));
-                console.log(JSON.stringify(sandbox.getGlobalIID(iid)));
-                console.log(JSON.stringify(val));
-                console.log(JSON.stringify(hasGetterSetter));
-                console.log();
-            }
+        this.functionEnter = function(iid, f, dis, args) {
+            stack.push(initArrays);
+            initArrays = [];
         };
 
-        this.invokeFun = function(iid, f, base, args, result, isConstructor, isMethod, functionIid) {
-            console.log("invokeFun");
-            console.log(JSON.stringify(iid));
-            console.log(JSON.stringify(sandbox.getGlobalIID(iid)));
-            console.log(JSON.stringify(f));
-            //console.log(JSON.stringify(base));
-            console.log(JSON.stringify(args));
-            console.log(JSON.stringify(result));
-            console.log(JSON.stringify(isConstructor));
-            console.log(JSON.stringify(isMethod));
-            console.log(JSON.stringify(functionIid));
-            console.log();
-            stack.push({typ: "invokeFun", args: args});
-        };
-
-        this.read = function(iid, name, val, isGlobal, isScriptLocal) {
-            console.log("read");
-            console.log("name: " + JSON.stringify(name));
-            console.log("val:" + JSON.stringify(val));
-            console.log();
-            stack.push({typ: "read", name: name, val: val});
+        this.functionExit = function(iid, returnVal, wrappedExceptionVal) {
+            finished.push(initArrays);
+            initArrays = stack.pop();
         };
 
         this.write = function(iid, name, val, lhs, isGlobal, isScriptLocal) {
-            console.log("write");
-            console.log("name:" + JSON.stringify(name));
-            console.log("val:" + JSON.stringify(val));
-            console.log("lhs:" + JSON.stringify(lhs));
-            console.log();
             if (val instanceof Array) {
-                initializedArrays[name] = JSON.parse(JSON.stringify(val));
+                var ref;
+                if ((ref = getRef(val))) {
+                    ref.addRef(name);
+                } else {
+                    initArrays.push(new ArrayReference(val, name));
+                }
             }
-            stack.push({typ: "write", name: name});
+        };
+
+        this.getFieldPre = function(iid, base, offset, val, isComputed, isOpAssign, isMethodCall) {
+            var i, ref;
+            if (offset === 'length') {
+                if ((ref = getRef(base))) {
+                    ref.lock();
+                }
+            } else if (offset >= 0) {
+                if ((ref = getRef(base))) {
+                    ref.lock(offset);
+                }
+            }
+        };
+
+        this.invokeFunPre = function(iid, f, base, args, result, isConstructor, isMethod, functionIid) {
+            var ref;
+            if (f === Array.prototype.push) {
+                if ((ref = getRef(base))) {
+                    ref.push(args["0"]);
+                }
+            } else if (f === Array.prototype.pop) {
+                if ((ref = getRef(base))) {
+                    ref.pop();
+                }
+            }
         };
 
         this.endExecution = function() {
-          console.log("\n\nReport:\n" + JSON.stringify(report));
-        };
-
-        this.endExpression = function() {
-            console.log("Stack is " + JSON.stringify(stack));
-
-            for (var i=0; i < stack.length; i++) {
-                if (stack[i].typ === "read" && initializedArrays[stack[i].name] !== undefined) {
-                    if (i < stack.length - 2) {
-                        if (stack[i + 1].typ === "getField" && stack[i + 1].offset === "push") {
-                            if (stack[i + 2].typ === "invokeFun") {
-                                initializedArrays[stack[i].name].push(stack[i + 2].args["0"]);
-                                var msg = stack[i].name + " may be initialized with: "
-                                    + initializedArrays[stack[i].name];
-                                report.push(msg);
-                                console.log(msg);
-                            }
-                        }
-                        if (stack[i + 1].typ === "getField" && stack[i + 1].offset === "pop") {
-                            if (stack[i + 2].typ === "invokeFun") {
-                                initializedArrays[stack[i].name].pop();
-                                var msg = stack[i].name + " may be initialized with: "
-                                    + initializedArrays[stack[i].name];
-                                report.push(msg);
-                                console.log(msg);
-                            }
-                        }
-                    } else if (i < stack.length - 1) {
-                        if (stack[i + 1].typ === "putField") {
-                            initializedArrays[stack[i].name][stack[i + 1].offset] = stack[i + 1].val;
-                            var msg = stack[i].name + " may be initialized with: "
-                                + initializedArrays[stack[i].name];
-                            report.push(msg);
-                            console.log(msg);
-                        }
-                    }
-                }
+            for(var i = 0; i < initArrays.length; i++) {
+                initArrays[i].print();
             }
-            stack = [];
-            console.log("Initialized array " + JSON.stringify(initializedArrays));
-            console.log("-----------------------------");
-        };
+            console.log("-------------------");
+            console.log("-------------------");
+            for (i = 0; i < finished.length; i++) {
+                for (var j=0; j < finished[i].length; j++) {
+                    finished[i][j].print();
+                }
+                console.log("----------------");
+            }
+        }
     }
+
     sandbox.analysis = new MyAnalysis();
 })(J$);
