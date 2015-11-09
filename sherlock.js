@@ -6,6 +6,7 @@
 
     function ArrayReference(base, name) {
         var optVer = JSON.parse(JSON.stringify(base));
+        var allFree = true;
         var locked = false;
         var lockedValues = {};
         var references = {};
@@ -22,6 +23,24 @@
             }
         };
 
+        this.update = function(offset, val) {
+            if (!locked && !lockedValues[offset]) {
+                optVer[offset] = val;
+            }
+        };
+
+        this.shift = function() {
+            if (!locked && allFree) {
+                optVer.shift();
+            }
+        };
+
+        this.unshift = function() {
+            if (!locked && allFree) {
+                optVer.unshift();
+            }
+        };
+
         this.addRef = function(name) {
             references[name] = true;
         };
@@ -33,14 +52,17 @@
         this.lock = function(num) {
             if (num >= 0) {
                 lockedValues[num] = true;
+                allFree = false;
             } else {
                 locked = true;
+                allFree = false;
             }
         };
 
         this.print = function() {
             console.log("references " + JSON.stringify(references));
             console.log("opt version " + JSON.stringify(optVer));
+            console.log("allFree " + JSON.stringify(allFree));
             console.log("locked " + JSON.stringify(locked));
             console.log("locked values " + JSON.stringify(lockedValues));
             console.log();
@@ -73,6 +95,17 @@
         this.functionExit = function(iid, returnVal, wrappedExceptionVal) {
             finished.push(initArrays);
             initArrays = stack.pop();
+        };
+
+        this.putFieldPre = function(iid, base, offset, val, isComputed, isOpAssign) {
+            if (base instanceof Array) {
+                var ref;
+                if ((ref = getRef(base))) {
+                    if (offset >= 0) {
+                        ref.update(offset, val);
+                    }
+                }
+            }
         };
 
         this.write = function(iid, name, val, lhs, isGlobal, isScriptLocal) {
@@ -108,6 +141,14 @@
             } else if (f === Array.prototype.pop) {
                 if ((ref = getRef(base))) {
                     ref.pop();
+                }
+            } else if (f === Array.prototype.shift) {
+                if ((ref = getRef(base))) {
+                    ref.shift();
+                }
+            } else if (f === Array.prototype.unshift) {
+                if ((ref = getRef(base))) {
+                    ref.unshift();
                 }
             }
         };
