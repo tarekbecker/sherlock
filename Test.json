@@ -1,0 +1,1 @@
+[{"isOptimized":true,"optimizedVersion":[1,2,3],"references":[{"name":"a","loc":"row: 1"}]},{"isOptimized":true,"optimizedVersion":[5,2,3],"references":[{"name":"b","loc":"row: 2"}]},{"isOptimized":true,"optimizedVersion":[1,2,3,5,9],"references":[{"name":"a","loc":"row: 6"}]}]
