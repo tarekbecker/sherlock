@@ -5,30 +5,44 @@
         var iidToLocation = sandbox.iidToLocation;
         
         
-        result = {}; //for storing which object can be optimized/not optimized
+        result = {}; //for storing object default initial values
         
         
         function showLocation(iid) {
         	//for finding the location
           console.log(' Source Location: ' + iidToLocation(iid));
         }
-        
-        
-//		this.literal = function (iid, val) {
-//		    console.log('creating literal operation intercepted: ' + val);
-//		    showLocation(iid);
-//		    return val;
-//		  };
-        
+
+        var oldbase;
         this.invokeFunPre = function (iid, f, base, args, isConstructor) {
             console.log('function call intercepted before invoking: ' + typeof base + base);
           //  showLocation(iid);
+            var oldbase = eval(JSON.stringify(base));
+            
+            if(typeof base == "object")
+            {
+                result.a = oldbase; //Find a way how to fetch object name and change with a.
+                console.log(result);
+            }
+           
           };
         
 		this.invokeFun = function (iid, f, base, args, val, isConstructor, isMethod, functionIid) {
 		  console.log('function call intercepted after invoking: ' + typeof base + base);
 		 // showLocation(iid);
-		  return val;
+		  
+
+		  
+		  if(result.a.length < base.length) // Doesnot work for lot of conditions
+			  {
+			   console.log("This object has been inserted with new elements in this function");
+			   
+			  }
+		  else{
+			  console.log("This object has not been pushed ");
+		  }
+		  
+		  
 		};
       
         
