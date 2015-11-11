@@ -7,7 +7,7 @@
     function MyAnalysis () {
         var iidToLocation = function(iid) {
             var loc = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(":").slice(-4, -2);
-            return "row: " + loc[0];
+            return "line: " + loc[0];
         };
 
         function ArrayReference(base, name, iid) {
@@ -80,10 +80,10 @@
             };
 
             this.lock = function(num) {
-                if (num >= 0) {
-                    lockedValues[num] = true;
-                } else {
+                if (num === "length") {
                     locked = true;
+                } else {
+                    lockedValues[num] = true;
                 }
             };
 
@@ -105,6 +105,14 @@
                 }
             };
 
+            this.getReferences = function() {
+                var out = [];
+                for(var i=0; i < references.length; i++) {
+                    out.push(references[i].name + "(" + references[i].loc + ")");
+                }
+                return JSON.stringify(out);
+            };
+
 
             this.addRef(name, iid);
         }
@@ -120,10 +128,23 @@
         };
 
         this.putFieldPre = function(iid, base, offset, val, isComputed, isOpAssign) {
+            var ref;
             if (base instanceof Array) {
-                var ref;
                 if ((ref = getRef(base))) {
                     if (offset >= 0) {
+                        console.log("Update " + ref.getReferences() + "[" + offset +"] = " + val + " at " +
+                            iidToLocation(iid));
+                        ref.update(offset, val);
+                    }
+                }
+            } else if (base instanceof Object) {
+                if ((ref = getRef(base))) {
+                    if (val instanceof Function) {
+                        console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
+                        ref.lock(offset);
+                    } else {
+                        console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
+                            iidToLocation(iid));
                         ref.update(offset, val);
                     }
                 }
@@ -131,11 +152,21 @@
         };
 
         this.write = function(iid, name, val, lhs, isGlobal, isScriptLocal) {
+            var ref;
             if (val instanceof Array) {
-                var ref;
                 if ((ref = getRef(val))) {
+                    console.log("Add array reference " + name + " at " + iidToLocation(iid));
                     ref.addRef(name, iid);
                 } else {
+                    console.log("Create array reference " + name + " at " + iidToLocation(iid));
+                    initArrays.push(new ArrayReference(val, name, iid));
+                }
+            } else if (val instanceof Object) {
+                if ((ref = getRef(val))) {
+                    console.log("Add object reference " + name + " at " + iidToLocation(iid));
+                    ref.addRef(name, iid);
+                } else {
+                    console.log("Create object reference " + name + " at " + iidToLocation(iid));
                     initArrays.push(new ArrayReference(val, name, iid));
                 }
             }
@@ -143,12 +174,23 @@
 
         this.getFieldPre = function(iid, base, offset, val, isComputed, isOpAssign, isMethodCall) {
             var i, ref;
-            if (offset === 'length') {
-                if ((ref = getRef(base))) {
-                    ref.lock();
+            if (base instanceof Array) {
+                if (offset === 'length') {
+                    if ((ref = getRef(base))) {
+                        console.log("Lock array " + ref.getReferences() + " at " + iidToLocation(iid));
+                        ref.lock();
+                    }
+                } else if (offset >= 0) {
+                    if ((ref = getRef(base))) {
+                        console.log("Lock array " + ref.getReferences() + " element " + offset + " at " +
+                            iidToLocation(iid));
+                        ref.lock(offset);
+                    }
                 }
-            } else if (offset >= 0) {
+            } else if (base instanceof Object) {
                 if ((ref = getRef(base))) {
+                    console.log("Lock object " + ref.getReferences() + " element " + offset + " at " +
+                        iidToLocation(iid));
                     ref.lock(offset);
                 }
             }
@@ -194,6 +236,8 @@
         };
 
         this.endExecution = function() {
+            console.log();
+            console.log("----------------------------------");
             for(var i = 0; i < initArrays.length; i++) {
                 initArrays[i].debug();
             }
