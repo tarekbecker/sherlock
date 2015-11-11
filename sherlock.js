@@ -80,7 +80,7 @@
             };
 
             this.lock = function(num) {
-                if (num === "length") {
+                if (num === undefined || num === "length") {
                     locked = true;
                 } else {
                     lockedValues[num] = true;
@@ -200,6 +200,13 @@
             // Methods according to http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.4
             var ref;
             // TODO: slice may only lock used values
+            var ignore = [Object.prototype.isPrototypeOf];
+
+            var methodsLockObject = [
+                Object.prototype.toString, Object.prototype.toLocaleString, Object.prototype.valueOf,
+                Object.prototype.hasOwnProperty
+            ];
+
             var methodsLockArray = [
                 Array.prototype.toString, Array.prototype.toLocaleString, Array.prototype.indexOf,
                 Array.prototype.lastIndexOf, Array.prototype.every, Array.prototype.some, Array.prototype.forEach,
@@ -216,7 +223,7 @@
                 if ((ref = getRef(base))) {
                     ref.callOnUnlocked(f, args);
                 }
-            } else if (methodsLockArray.indexOf(f) !== -1) {
+            } else if (methodsLockArray.indexOf(f) !== -1 || methodsLockObject.indexOf(f) !== -1) {
                 if ((ref = getRef(base))) {
                     ref.lock();
                 }
@@ -231,6 +238,10 @@
             } else if (f === Array.prototype.pop) {
                 if ((ref = getRef(base))) {
                     ref.pop();
+                }
+            } else if (f === Object.prototype.propertyIsEnumerable) {
+                if ((ref = getRef(base))) {
+                    ref.lock(args[0]);
                 }
             }
         };
