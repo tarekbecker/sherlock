@@ -1,5 +1,10 @@
-/*var a =  [];
-var z = a.toString();*/
+var a =  [];
+a[0] = (function() {return 0;})();
+var x = function() {
+    return 0;
+};
+
+a[1] = x();
 /*var b = [1, 2, 3];
 a.concat(b);
 
@@ -15,11 +20,10 @@ a.concat(b);
 b[0] = 5;
 var c = a[0];
 a.filter(function (x) {return x > 2});
-*/
 var a = {};
 a.x = 5;
 var z = a.x;
 a.y = 6;
 a.y = 7;
 a.x = 10;
-a.t = function() {return z;};
+a.t = function() {return z;};*/

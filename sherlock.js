@@ -1,13 +1,82 @@
+var esprima = require('esprima');
+var fs = require('fs');
 // do not remove the following comment
 // JALANGI DO NOT INSTRUMENT
 
 
-(function (sandbox) {
+(function(sandbox) {
 
-    function MyAnalysis () {
+    function MyAnalysis() {
+
+        var compareLoc = function(a, b) {
+            return JSON.stringify(a) == JSON.stringify(b);
+        };
+
+
+        var findNodeInAst = function(ast, loc) {
+            for(var l in ast) {
+                if (ast.hasOwnProperty(l)) {
+                    var e = ast[l];
+                    if (e) {
+                        if (e.hasOwnProperty("loc")) {
+                            if (compareLoc(e['loc'], loc)) {
+                                return e;
+                            }
+                        }
+                        if (e instanceof Object) {
+                            var res = findNodeInAst(e, loc);
+                            if (res != null) {
+                                return res;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        };
+
+        var doesTypeExist = function(ast, type) {
+            for(var l in ast) {
+                if (ast.hasOwnProperty(l)) {
+                    var e = ast[l];
+                    if (e.hasOwnProperty("type")) {
+                        if (e["type"] == type) {
+                            return true;
+                        }
+                    }
+                    if (e instanceof Object) {
+                        var res = doesTypeExist(e, type);
+                        if (res == true) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+
+        var getAstObj = function(iid) {
+            var parts = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(':');
+            var path = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(':')[0];
+            path = path.substring(1, path.length);
+            var file = fs.readFileSync(path, "utf8");
+            console.log(sandbox.iidToLocation(J$.getGlobalIID(iid)));
+            console.log(JSON.stringify(esprima.parse(file, {loc: true}).body));
+            return findNodeInAst(esprima.parse(file, {loc: true}).body, {
+                "start": {
+                    "line": parseInt(parts[1]),
+                    "column": parseInt(parts[2]) - 1
+                },
+                "end": {
+                    "line": parseInt(parts[3]),
+                    "column": parseInt(parts[4]) - 1
+                }
+            });
+        };
+
         var iidToLocation = function(iid) {
-            var loc = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(":").slice(-4, -2);
-            return "line: " + loc[0];
+            var loc = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(':').slice(-4, -2);
+            return 'line: ' + loc[0];
         };
 
         function ArrayReference(base, name, iid) {
@@ -19,8 +88,8 @@
 
             var allFree = function() {
                 var value;
-                for(value in lockedValues) {
-                    if(lockedValues.hasOwnProperty(value) && lockedValues[value]) {
+                for (value in lockedValues) {
+                    if (lockedValues.hasOwnProperty(value) && lockedValues[value]) {
                         return false;
                     }
                 }
@@ -30,7 +99,7 @@
             this.concat = function(args) {
                 if (!locked) {
                     var i = 0;
-                    while(args.hasOwnProperty(i + "") && args[i] instanceof Array) {
+                    while (args.hasOwnProperty(i + '') && args[i] instanceof Array) {
                         optVer = optVer.concat(args[i]);
                         i++;
                     }
@@ -80,7 +149,7 @@
             };
 
             this.lock = function(num) {
-                if (num === undefined || num === "length") {
+                if (num === undefined || num === 'length') {
                     locked = true;
                 } else {
                     lockedValues[num] = true;
@@ -88,12 +157,12 @@
             };
 
             this.debug = function() {
-                console.log("references " + JSON.stringify(references));
-                console.log("is opt " + JSON.stringify(isOpt));
-                console.log("opt version " + JSON.stringify(optVer));
-                console.log("allFree " + JSON.stringify(allFree));
-                console.log("locked " + JSON.stringify(locked));
-                console.log("locked values " + JSON.stringify(lockedValues));
+                console.log('references ' + JSON.stringify(references));
+                console.log('is opt ' + JSON.stringify(isOpt));
+                console.log('opt version ' + JSON.stringify(optVer));
+                console.log('allFree ' + JSON.stringify(allFree));
+                console.log('locked ' + JSON.stringify(locked));
+                console.log('locked values ' + JSON.stringify(lockedValues));
                 console.log();
             };
 
@@ -102,13 +171,13 @@
                     isOptimized: isOpt,
                     optimizedVersion: optVer,
                     references: references
-                }
+                };
             };
 
             this.getReferences = function() {
                 var out = [];
-                for(var i=0; i < references.length; i++) {
-                    out.push(references[i].name + "(" + references[i].loc + ")");
+                for (var i = 0; i < references.length; i++) {
+                    out.push(references[i].name + '(' + references[i].loc + ')');
                 }
                 return JSON.stringify(out);
             };
@@ -120,7 +189,7 @@
         var initArrays = [];
 
         var getRef = function(base) {
-            for(var i = 0; i < initArrays.length; i++) {
+            for (var i = 0; i < initArrays.length; i++) {
                 if (initArrays[i].equals(base)) {
                     return initArrays[i];
                 }
@@ -129,10 +198,16 @@
 
         this.putFieldPre = function(iid, base, offset, val, isComputed, isOpAssign) {
             var ref;
+            var astObj = getAstObj(iid);
+            if (astObj.type === "AssignmentExpression") {
+                if (doesTypeExist(astObj, "CallExpression")) {
+                    console.log("Function call detected");
+                }
+            }
             if (base instanceof Array) {
                 if ((ref = getRef(base))) {
                     if (offset >= 0) {
-                        console.log("Update " + ref.getReferences() + "[" + offset +"] = " + val + " at " +
+                        console.log('Update ' + ref.getReferences() + '[' + offset + '] = ' + val + ' at ' +
                             iidToLocation(iid));
                         ref.update(offset, val);
                     }
@@ -140,10 +215,10 @@
             } else if (base instanceof Object) {
                 if ((ref = getRef(base))) {
                     if (val instanceof Function) {
-                        console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
+                        console.log('Assigned function to ' + ref.getReferences() + '[' + offset + ']. Lock that value');
                         ref.lock(offset);
                     } else {
-                        console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
+                        console.log('Update ' + ref.getReferences() + '[' + offset + '] = ' + val + ' at ' +
                             iidToLocation(iid));
                         ref.update(offset, val);
                     }
@@ -155,18 +230,18 @@
             var ref;
             if (val instanceof Array) {
                 if ((ref = getRef(val))) {
-                    console.log("Add array reference " + name + " at " + iidToLocation(iid));
+                    console.log('Add array reference ' + name + ' at ' + iidToLocation(iid));
                     ref.addRef(name, iid);
                 } else {
-                    console.log("Create array reference " + name + " at " + iidToLocation(iid));
+                    console.log('Create array reference ' + name + ' at ' + iidToLocation(iid));
                     initArrays.push(new ArrayReference(val, name, iid));
                 }
-            } else if (val instanceof Object) {
+            } else if (!(val instanceof Function) && val instanceof Object) {
                 if ((ref = getRef(val))) {
-                    console.log("Add object reference " + name + " at " + iidToLocation(iid));
+                    console.log('Add object reference ' + name + ' at ' + iidToLocation(iid));
                     ref.addRef(name, iid);
                 } else {
-                    console.log("Create object reference " + name + " at " + iidToLocation(iid));
+                    console.log('Create object reference ' + name + ' at ' + iidToLocation(iid));
                     initArrays.push(new ArrayReference(val, name, iid));
                 }
             }
@@ -177,19 +252,19 @@
             if (base instanceof Array) {
                 if (offset === 'length') {
                     if ((ref = getRef(base))) {
-                        console.log("Lock array " + ref.getReferences() + " at " + iidToLocation(iid));
+                        console.log('Lock array ' + ref.getReferences() + ' at ' + iidToLocation(iid));
                         ref.lock();
                     }
                 } else if (offset >= 0) {
                     if ((ref = getRef(base))) {
-                        console.log("Lock array " + ref.getReferences() + " element " + offset + " at " +
+                        console.log('Lock array ' + ref.getReferences() + ' element ' + offset + ' at ' +
                             iidToLocation(iid));
                         ref.lock(offset);
                     }
                 }
             } else if (base instanceof Object) {
                 if ((ref = getRef(base))) {
-                    console.log("Lock object " + ref.getReferences() + " element " + offset + " at " +
+                    console.log('Lock object ' + ref.getReferences() + ' element ' + offset + ' at ' +
                         iidToLocation(iid));
                     ref.lock(offset);
                 }
@@ -229,11 +304,11 @@
                 }
             } else if (f == Array.prototype.concat) {
                 if ((ref = getRef(base))) {
-                    ref.concat(args)
+                    ref.concat(args);
                 }
             } else if (f === Array.prototype.push) {
                 if ((ref = getRef(base))) {
-                    ref.push(args["0"]);
+                    ref.push(args['0']);
                 }
             } else if (f === Array.prototype.pop) {
                 if ((ref = getRef(base))) {
@@ -248,17 +323,17 @@
 
         this.endExecution = function() {
             console.log();
-            console.log("----------------------------------");
-            for(var i = 0; i < initArrays.length; i++) {
+            console.log('----------------------------------');
+            for (var i = 0; i < initArrays.length; i++) {
                 initArrays[i].debug();
             }
 
             var out = [];
-            for(i = 0; i < initArrays.length; i++) {
+            for (i = 0; i < initArrays.length; i++) {
                 out.push(initArrays[i].get());
             }
             console.log(JSON.stringify(out));
-        }
+        };
     }
 
     sandbox.analysis = new MyAnalysis();
