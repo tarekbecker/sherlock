@@ -1,0 +1,63 @@
+[
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "a": "foo",
+      "b": "bar"
+    },
+    "references": [
+      {
+        "name": "obj",
+        "loc": "line: 1"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "a": "foo"
+    },
+    "references": [
+      {
+        "name": "obj2",
+        "loc": "line: 7"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "a": "foo"
+    },
+    "references": [
+      {
+        "name": "obj3",
+        "loc": "line: 13"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "a": "foo"
+    },
+    "references": [
+      {
+        "name": "obj4",
+        "loc": "line: 19"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "a": "foo"
+    },
+    "references": [
+      {
+        "name": "obj5",
+        "loc": "line: 25"
+      }
+    ]
+  }
+]

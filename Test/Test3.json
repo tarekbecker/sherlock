@@ -1,0 +1,30 @@
+[
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      5,
+      2
+    ],
+    "references": [
+      {
+        "name": "a",
+        "loc": "line: 1"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "references": [
+      {
+        "name": "a",
+        "loc": "line: 4"
+      }
+    ]
+  }
+]
