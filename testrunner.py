@@ -21,6 +21,8 @@ d = defaults.copy()
 d.update(os.environ)
 d.update(cli_args)
 
+pprint(d)
+
 passed_tests = []
 failed_tests = []
 failed_tests_output = []
@@ -57,7 +59,7 @@ for file in os.listdir(d['tests']):
 					os.remove(os.path.join(d['tests'], test[:-3] + '_jalangi_.js'))
 					os.remove(os.path.join(d['tests'], test[:-3] + '_jalangi_.json'))
 				except OSError:
-					sys.stderr.write("Error while removing files")
+					sys.stderr.write('Error while removing files\n')
 		test = None
 
 if not failed_tests:
