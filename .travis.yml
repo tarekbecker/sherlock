@@ -1,10 +1,14 @@
 language: node_js
 node_js:
   - "0.12"
+sudo: false
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install python-software-properties python g++ make
-  - sudo add-apt-repository ppa:chris-lea/node.js
   - "git clone https://github.com/Samsung/jalangi2 ~/jalangi2 && cd ~/jalangi2 && npm install"
 env:
   - jalangi=~/jalangi
+addons:
+  apt:
+    packages:
+    - python-software-properties
+    - python
+    - make
