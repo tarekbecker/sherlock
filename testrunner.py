@@ -21,8 +21,6 @@ d = defaults.copy()
 d.update(os.environ)
 d.update(cli_args)
 
-pprint(d)
-
 passed_tests = []
 failed_tests = []
 failed_tests_output = []
