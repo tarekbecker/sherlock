@@ -5,7 +5,7 @@ sudo: false
 before_install:
   - "git clone https://github.com/Samsung/jalangi2 ~/jalangi2 && (cd ~/jalangi2; npm install)"
 before_script:
-  pep8 .
+  gjslint ./sherlock.js
 env:
   - jalangi=~/jalangi2
 addons:
@@ -13,5 +13,4 @@ addons:
     packages:
     - python-software-properties
     - python
-    - pep8
     - make
