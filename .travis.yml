@@ -3,7 +3,10 @@ node_js:
   - "0.12"
 sudo: false
 before_install:
+  - "pip install pep8"
   - "git clone https://github.com/Samsung/jalangi2 ~/jalangi2 && (cd ~/jalangi2; npm install)"
+before_script:
+  pep8 .
 env:
   - jalangi=~/jalangi2
 addons:
