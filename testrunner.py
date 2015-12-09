@@ -39,18 +39,25 @@ for file in os.listdir(d['tests']):
 						  ' --analysis ' + d['sherlock'] + ' ' + d['tests'] + '/' + test
 				p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 				stdout = p.stdout.readlines()
-				output = json.loads('{ "result":' + stdout[-1] + '}')
-				p.wait()
-				if result == output:
-					passed_tests.append(test)
-				else:
-					for line in stdout:
-						print line
-					pprint(output)	
-					pprint(result)
+				try:					
+					output = json.loads('{ "result":' + stdout[-1] + '}')
+					p.wait()
+					if result == output:
+						passed_tests.append(test)
+					else:
+						for line in stdout:
+							print line
+						pprint(output)	
+						pprint(result)
+						failed_tests.append(test)
+				except ValueError:
 					failed_tests.append(test)
-				os.remove(os.path.join(d['tests'], test[:-3] + '_jalangi_.js'))
-				os.remove(os.path.join(d['tests'], test[:-3] + '_jalangi_.json'))
+					print stdout
+				try:
+					os.remove(os.path.join(d['tests'], test[:-3] + '_jalangi_.js'))
+					os.remove(os.path.join(d['tests'], test[:-3] + '_jalangi_.json'))
+				except OSError:
+					sys.stderr.write("Error while removing files")
 		test = None
 
 if not failed_tests:
