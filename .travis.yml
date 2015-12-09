@@ -13,4 +13,5 @@ addons:
     packages:
     - python-software-properties
     - python
+    - pep8
     - make
