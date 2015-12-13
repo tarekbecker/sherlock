@@ -5,6 +5,9 @@
 (function (sandbox) {
 
     function MyAnalysis () {
+
+        var inCondBranch = 0;
+
         var iidToLocation = function(iid) {
             var loc = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(":").slice(-4, -2);
             return "line: " + loc[0];
@@ -19,6 +22,9 @@
 
             var allFree = function() {
                 var value;
+                if (!checkLock()) {
+                    return false;
+                }
                 for(value in lockedValues) {
                     if(lockedValues.hasOwnProperty(value) && lockedValues[value]) {
                         return false;
@@ -27,19 +33,30 @@
                 return true;
             };
 
+            var checkLock = function(index) {
+                if (index === undefined) {
+                    // check for last index
+                    return (!locked && inCondBranch == 0);
+                } else {
+                    return (checkLock() && !lockedValues[index])
+                }
+            };
+
             this.concat = function(args) {
-                if (!locked) {
+                if (checkLock()) {
                     var i = 0;
                     while(args.hasOwnProperty(i + "") && args[i] instanceof Array) {
                         optVer = optVer.concat(args[i]);
                         i++;
                     }
                     isOpt = true;
+                } else {
+                    locked = true;
                 }
             };
 
             this.callOnUnlocked = function(f, args) {
-                if (!locked && allFree()) {
+                if (allFree()) {
                     f.apply(optVer, args);
                     isOpt = true;
                 } else {
@@ -48,23 +65,29 @@
             };
 
             this.push = function(val) {
-                if (!locked && !lockedValues[optVer.length + 1]) {
+                if (checkLock(optVer.length + 1)) {
                     optVer.push(val);
                     isOpt = true;
+                } else {
+                    lockedValues[optVer.length + 1] = true;
                 }
             };
 
             this.pop = function() {
-                if (!locked && !lockedValues[optVer.length - 1]) {
+                if (checkLock(optVer.length + 1)) {
                     optVer.pop();
                     isOpt = true;
+                } else {
+                    lockedValues[optVer.length + 1] = true;
                 }
             };
 
             this.update = function(offset, val) {
-                if (!locked && !lockedValues[offset]) {
+                if (checkLock(offset)) {
                     optVer[offset] = val;
                     isOpt = true;
+                } else {
+                    lockedValues[offset] = true;
                 }
             };
 
@@ -258,6 +281,24 @@
                 out.push(initArrays[i].get());
             }
             console.log(JSON.stringify(out));
+        };
+
+        this.conditional = function(iid, result) {
+            if (inCondBranch == 0) {
+                inCondBranch = 1;
+            }
+        };
+
+        this.functionEnter = function(iid, f, dis, args) {
+            if (inCondBranch > 0) {
+                inCondBranch++;
+            }
+        };
+
+        this.functionExit = function(iid, returnVal, wrappedExceptionVal) {
+            if (inCondBranch > 0) {
+                inCondBranch--;
+            }
         }
     }
 
