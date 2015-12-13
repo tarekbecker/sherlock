@@ -12,3 +12,5 @@ addons:
     - python-software-properties
     - python
     - make
+notifications:
+  email: false
