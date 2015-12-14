@@ -4,7 +4,7 @@
 
 (function (sandbox) {
 
-    function MyAnalysis () {
+    function Sherlock () {
 
         var inCondBranch = 0;
 
@@ -20,28 +20,57 @@
             var lockedValues = {};
             var references = [];
 
+            /**
+             * Check if no index of the reference (either an array or an object) is blocked.
+             * Does also check if the code is in a conditional branch right now
+             * @returns {boolean} true, if nothing is locked, false if any item is blocked or
+             *  the coding might be in a conditional branch right now.
+             */
             var allFree = function() {
                 var value;
+
                 if (!checkLock()) {
                     return false;
-                }
-                for(value in lockedValues) {
-                    if(lockedValues.hasOwnProperty(value) && lockedValues[value]) {
-                        return false;
+                } else {
+                    for (value in lockedValues) {
+                        if (lockedValues.hasOwnProperty(value) && lockedValues[value]) {
+                            return false;
+                        }
                     }
                 }
                 return true;
             };
 
+            /**
+             * Checks if a given index of the reference is blocked. If the reference is null
+             * it will just check if the full element is not blocked and it's not in a
+             * conditional branch right now
+             *
+             * @param index the index that should be checked, either an int for arrays, any
+             *  value of objects or undefined.
+             *
+             * @returns {boolean} true, if it's not locked, false, if it's locked
+             */
             var checkLock = function(index) {
                 if (index === undefined) {
-                    // check for last index
                     return (!locked && inCondBranch == 0);
                 } else {
                     return (checkLock() && !lockedValues[index])
                 }
             };
 
+            /**
+             * Checks if the reference is an array or an object
+             * @returns {boolean} true, if it's an array, false if not
+             */
+            var isArray = function() {
+                return optVer instanceof Array
+            };
+
+            /**
+             * Implementation for array.concat.
+             * @param args array to concatenate
+             */
             this.concat = function(args) {
                 if (checkLock()) {
                     var i = 0;
@@ -55,6 +84,13 @@
                 }
             };
 
+            /**
+             * Generic caller for function that are just allow to called on objects or
+             * array without any lock on any value. (e.g. reverse; fucntions that mutate
+             * every element of the object/array)
+             * @param f function that will be called
+             * @param args arguments of the function
+             */
             this.callOnUnlocked = function(f, args) {
                 if (allFree()) {
                     f.apply(optVer, args);
@@ -64,6 +100,10 @@
                 }
             };
 
+            /**
+             * Implementation for array.push
+             * @param val value that should be pushed
+             */
             this.push = function(val) {
                 if (checkLock(optVer.length + 1)) {
                     optVer.push(val);
@@ -73,6 +113,9 @@
                 }
             };
 
+            /**
+             * Implementation for array.pop
+             */
             this.pop = function() {
                 if (checkLock(optVer.length + 1)) {
                     optVer.pop();
@@ -82,6 +125,12 @@
                 }
             };
 
+            /**
+             * Implementation for updating an object property / array
+             * field by index/offset
+             * @param offset the offset or index of the property
+             * @param val the value that should be written
+             */
             this.update = function(offset, val) {
                 if (checkLock(offset)) {
                     optVer[offset] = val;
@@ -91,6 +140,11 @@
                 }
             };
 
+            /**
+             * Adds a new reference to an array or object
+             * @param name variable name
+             * @param iid id to identify the call
+             */
             this.addRef = function(name, iid) {
                 references.push({
                     name: name,
@@ -102,8 +156,13 @@
                 return base === val;
             };
 
+            /**
+             * Lock a value of a reference by it's index
+             * @param num index that should be logged, if num === undefined
+             * or (num === "length" && isArray()) the total element will be locked
+             */
             this.lock = function(num) {
-                if (num === undefined || num === "length") {
+                if (num === undefined || (num === "length" && isArray())) {
                     locked = true;
                 } else {
                     lockedValues[num] = true;
@@ -302,5 +361,5 @@
         }
     }
 
-    sandbox.analysis = new MyAnalysis();
+    sandbox.analysis = new Sherlock();
 })(J$);
