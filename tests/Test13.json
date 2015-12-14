@@ -1,0 +1,68 @@
+[
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array",
+        "loc": "line: 1"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      5,
+      10
+    ],
+    "references": [
+      {
+        "name": "array2",
+        "loc": "line: 2"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "text": "text",
+      "number": 10
+    },
+    "references": [
+      {
+        "name": "a",
+        "loc": "line: 3"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      5,
+      10
+    ],
+    "references": [
+      {
+        "name": "array3",
+        "loc": "line: 13"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "firstName": "David",
+      "lastName": "Guesewell",
+      "phoneNumber": 61052
+    },
+    "references": [
+      {
+        "name": "person",
+        "loc": "line: 30"
+      }
+    ]
+  }
+]

@@ -2,10 +2,7 @@
   {
     "isOptimized": true,
     "optimizedVersion": [
-      0,
-      1,
-      2,
-      3
+      0
     ],
     "references": [
       {

@@ -1,0 +1,118 @@
+[
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      0,
+      1,
+      3
+    ],
+    "references": [
+      {
+        "name": "array",
+        "loc": "line: 1"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      0,
+      1,
+      3
+    ],
+    "references": [
+      {
+        "name": "array",
+        "loc": "line: 1"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "a": "foo",
+      "b": "bar"
+    },
+    "references": [
+      {
+        "name": "obj",
+        "loc": "line: 3"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "a": "foo"
+    },
+    "references": [
+      {
+        "name": "obj2",
+        "loc": "line: 9"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "a": "foo"
+    },
+    "references": [
+      {
+        "name": "obj3",
+        "loc": "line: 15"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "a": "foo"
+    },
+    "references": [
+      {
+        "name": "obj4",
+        "loc": "line: 21"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "a": "foo"
+    },
+    "references": [
+      {
+        "name": "obj5",
+        "loc": "line: 27"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array",
+        "loc": "line: 33"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "a": "foo",
+      "b": "bar"
+    },
+    "references": [
+      {
+        "name": "obj2",
+        "loc": "line: 37"
+      }
+    ]
+  }
+]
+

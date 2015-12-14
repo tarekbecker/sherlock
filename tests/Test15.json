@@ -1,0 +1,101 @@
+[
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      "South America",
+      "Central America",
+      "West Africa"
+    ],
+    "references": [
+      {
+        "name": "countries",
+        "loc": "line: 12"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "color": "Yellow",
+      "sweetness": 5,
+      "fruitName": "Mango",
+      "nativeToLand": [
+        "South America",
+        "Central America",
+        "West Africa"
+      ]
+    },
+    "references": [
+      {
+        "name": "mangoFruit",
+        "loc": "line: 13"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": {
+      "color": "Brown",
+      "sweetness": 5,
+      "fruitName": "Pineapple",
+      "nativeToLand": "USA"
+    },
+    "references": [
+      {
+        "name": "pineappleFruit",
+        "loc": "line: 15"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      {
+        "color": "Yellow",
+        "sweetness": 8,
+        "fruitName": "Mango",
+        "nativeToLand": [
+          "South America",
+          "Central America",
+          "West Africa",
+          "USA"
+        ]
+      },
+      {
+        "color": "Brown",
+        "sweetness": 5,
+        "fruitName": "Pineapple",
+        "nativeToLand": "USA"
+      },
+      {
+        "color": "Orange",
+        "sweetness": 8,
+        "fruitName": "Orange",
+        "nativeToLand": "Central America",
+        "sweetnees": 3
+      }
+    ],
+    "references": [
+      {
+        "name": "fruits",
+        "loc": "line: 17"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "color": "Orange",
+      "sweetness": 8,
+      "fruitName": "Orange",
+      "nativeToLand": "Central America",
+      "sweetnees": 3
+    },
+    "references": [
+      {
+        "name": "orangeFruit",
+        "loc": "line: 32"
+      }
+    ]
+  }
+]
