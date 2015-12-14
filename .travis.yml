@@ -1,0 +1,16 @@
+language: node_js
+node_js:
+  - "0.12"
+sudo: false
+before_install:
+  - "git clone https://github.com/Samsung/jalangi2 ~/jalangi2 && (cd ~/jalangi2; npm install)"
+env:
+  - jalangi=~/jalangi2
+addons:
+  apt:
+    packages:
+    - python-software-properties
+    - python
+    - make
+notifications:
+  email: false

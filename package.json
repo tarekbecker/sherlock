@@ -1,0 +1,22 @@
+{
+  "name": "sherlock",
+  "version": "0.0.1",
+  "description": "",
+  "main": "sherlock.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "private": true,
+  "scripts": {
+    "test": "./testrunner.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tarekauel/sherlock.git"
+  },
+  "author": "Tarek Auel, David Guesewell",
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/tarekauel/sherlock/issues"
+  },
+  "homepage": "https://github.com/tarekauel/sherlock#readme"
+}
