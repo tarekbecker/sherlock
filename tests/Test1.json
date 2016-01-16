@@ -1,0 +1,16 @@
+[
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      0,
+      1,
+      3
+    ],
+    "references": [
+      {
+        "name": "array",
+        "loc": "line: 1"
+      }
+    ]
+  }
+]

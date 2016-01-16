@@ -49,3 +49,5 @@ crashlytics-build.properties
 # Created by .ignore support plugin (hsz.mobi)
 
 *_jalangi_.js*
+/jalangi2
+/node_modules

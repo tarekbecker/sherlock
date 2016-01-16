@@ -1,0 +1,223 @@
+[
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array",
+        "loc": "line: 1"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array2",
+        "loc": "line: 5"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array3",
+        "loc": "line: 9"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array4",
+        "loc": "line: 13"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array5",
+        "loc": "line: 17"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array6",
+        "loc": "line: 21"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array7",
+        "loc": "line: 25"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array8",
+        "loc": "line: 29"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      1,
+      2
+    ],
+    "references": [
+      {
+        "name": "tmp8",
+        "loc": "line: 30"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array9",
+        "loc": "line: 33"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array10",
+        "loc": "line: 39"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array11",
+        "loc": "line: 45"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array12",
+        "loc": "line: 51"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "array13",
+        "loc": "line: 55"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+
+    ],
+    "references": [
+      {
+        "name": "tmp13",
+        "loc": "line: 56"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1,
+      2
+    ],
+    "references": [
+      {
+        "name": "array14",
+        "loc": "line: 59"
+      }
+    ]
+  },
+  {
+    "isOptimized": false,
+    "optimizedVersion": [
+      0,
+      1
+    ],
+    "references": [
+      {
+        "name": "tmp14",
+        "loc": "line: 60"
+      }
+    ]
+  }
+]

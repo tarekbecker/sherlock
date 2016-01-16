@@ -4,7 +4,19 @@
 
 (function (sandbox) {
 
-    function MyAnalysis () {
+    function Sherlock () {
+
+        var inCondBranch = 0;
+
+        var logLevel = 0;
+        var verbose = logLevel <= 0;
+        var debug = logLevel <= 1;
+        var info = logLevel <= 2;
+
+        var callStack = [];
+        var checkLengthToLock = null;
+        var lastPutField = null;
+
         var iidToLocation = function(iid) {
             var loc = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(":").slice(-4, -2);
             return "line: " + loc[0];
@@ -17,29 +29,79 @@
             var lockedValues = {};
             var references = [];
 
+            /**
+             * Check if no index of the reference (either an array or an object) is blocked.
+             * Does also check if the code is in a conditional branch right now
+             * @returns {boolean} true, if nothing is locked, false if any item is blocked or
+             *  the coding might be in a conditional branch right now.
+             */
             var allFree = function() {
                 var value;
-                for(value in lockedValues) {
-                    if(lockedValues.hasOwnProperty(value) && lockedValues[value]) {
-                        return false;
+
+                if (!checkLock()) {
+                    return false;
+                } else {
+                    for (value in lockedValues) {
+                        if (lockedValues.hasOwnProperty(value) && lockedValues[value]) {
+                            return false;
+                        }
                     }
                 }
                 return true;
             };
 
+            /**
+             * Checks if a given index of the reference is blocked. If the reference is null
+             * it will just check if the full element is not blocked and it's not in a
+             * conditional branch right now
+             *
+             * @param index the index that should be checked, either an int for arrays, any
+             *  value of objects or undefined.
+             *
+             * @returns {boolean} true, if it's not locked, false, if it's locked
+             */
+            var checkLock = function(index) {
+                if (index === undefined) {
+                    return (!locked && inCondBranch == 0);
+                } else {
+                    return (checkLock() && !lockedValues[index])
+                }
+            };
+
+            /**
+             * Checks if the reference is an array or an object
+             * @returns {boolean} true, if it's an array, false if not
+             */
+            var isArray = function() {
+                return optVer instanceof Array
+            };
+
+            /**
+             * Implementation for array.concat.
+             * @param args array to concatenate
+             */
             this.concat = function(args) {
-                if (!locked) {
+                if (checkLock()) {
                     var i = 0;
                     while(args.hasOwnProperty(i + "") && args[i] instanceof Array) {
                         optVer = optVer.concat(args[i]);
                         i++;
                     }
                     isOpt = true;
+                } else {
+                    locked = true;
                 }
             };
 
+            /**
+             * Generic caller for function that are just allow to called on objects or
+             * array without any lock on any value. (e.g. reverse; fucntions that mutate
+             * every element of the object/array)
+             * @param f function that will be called
+             * @param args arguments of the function
+             */
             this.callOnUnlocked = function(f, args) {
-                if (!locked && allFree()) {
+                if (allFree()) {
                     f.apply(optVer, args);
                     isOpt = true;
                 } else {
@@ -47,27 +109,51 @@
                 }
             };
 
+            /**
+             * Implementation for array.push
+             * @param val value that should be pushed
+             */
             this.push = function(val) {
-                if (!locked && !lockedValues[optVer.length + 1]) {
+                if (checkLock(optVer.length + 1)) {
                     optVer.push(val);
                     isOpt = true;
+                } else {
+                    lockedValues[optVer.length + 1] = true;
                 }
             };
 
+            /**
+             * Implementation for array.pop
+             */
             this.pop = function() {
-                if (!locked && !lockedValues[optVer.length - 1]) {
+                if (checkLock(optVer.length - 1)) {
                     optVer.pop();
                     isOpt = true;
+                } else {
+                    lockedValues[optVer.length - 1] = true;
                 }
             };
 
+            /**
+             * Implementation for updating an object property / array
+             * field by index/offset
+             * @param offset the offset or index of the property
+             * @param val the value that should be written
+             */
             this.update = function(offset, val) {
-                if (!locked && !lockedValues[offset]) {
+                if (checkLock(offset)) {
                     optVer[offset] = val;
                     isOpt = true;
+                } else {
+                    lockedValues[offset] = true;
                 }
             };
 
+            /**
+             * Adds a new reference to an array or object
+             * @param name variable name
+             * @param iid id to identify the call
+             */
             this.addRef = function(name, iid) {
                 references.push({
                     name: name,
@@ -79,8 +165,13 @@
                 return base === val;
             };
 
+            /**
+             * Lock a value of a reference by it's index
+             * @param num index that should be logged, if num === undefined
+             * or (num === "length" && isArray()) the total element will be locked
+             */
             this.lock = function(num) {
-                if (num === undefined || num === "length") {
+                if (num === undefined || (num === "length" && isArray())) {
                     locked = true;
                 } else {
                     lockedValues[num] = true;
@@ -128,13 +219,22 @@
         };
 
         this.putFieldPre = function(iid, base, offset, val, isComputed, isOpAssign) {
+            callStack.push("putFieldPre");
+            if (verbose) {
+                console.log("putFieldPre:", iid, base, offset, val, isComputed, isOpAssign);
+            }
             var ref;
             if (base instanceof Array) {
                 if ((ref = getRef(base))) {
                     if (offset >= 0) {
-                        console.log("Update " + ref.getReferences() + "[" + offset +"] = " + val + " at " +
-                            iidToLocation(iid));
-                        ref.update(offset, val);
+                        /*if (checkLengthToLock === null) {
+                            console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
+                              iidToLocation(iid));
+                            ref.update(offset, val);
+                        } else {*/
+                        // check if return value of function is assigned
+                            lastPutField = [ref,offset, val];
+                        //}
                     }
                 }
             } else if (base instanceof Object) {
@@ -143,15 +243,20 @@
                         console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
                         ref.lock(offset);
                     } else {
-                        console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
+                        /*console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
                             iidToLocation(iid));
-                        ref.update(offset, val);
+                        ref.update(offset, val);*/
+                        lastPutField = [ref,offset, val];
                     }
                 }
             }
         };
 
         this.write = function(iid, name, val, lhs, isGlobal, isScriptLocal) {
+            callStack.push("write");
+            if (verbose) {
+                console.log("write:", iid, name, val, lhs, isGlobal, isScriptLocal);
+            }
             var ref;
             if (val instanceof Array) {
                 if ((ref = getRef(val))) {
@@ -159,7 +264,11 @@
                     ref.addRef(name, iid);
                 } else {
                     console.log("Create array reference " + name + " at " + iidToLocation(iid));
-                    initArrays.push(new ArrayReference(val, name, iid));
+                    ref = new ArrayReference(val, name, iid);
+                    initArrays.push(ref);
+                }
+                if (callStack[0] == "functionExit") {
+                    ref.lock();
                 }
             } else if (val instanceof Object) {
                 if ((ref = getRef(val))) {
@@ -167,18 +276,44 @@
                     ref.addRef(name, iid);
                 } else {
                     console.log("Create object reference " + name + " at " + iidToLocation(iid));
-                    initArrays.push(new ArrayReference(val, name, iid));
+                    ref = new ArrayReference(val, name, iid);
+                    initArrays.push(ref);
+                }
+                if (callStack[0] == "functionExit") {
+                    ref.lock();
                 }
             }
         };
 
+        this.binary = function(iid, op, left, right, result, isOpAssign, isSwitchCaseComparison, isComputed) {
+            callStack.push("binary");
+            if (verbose) {
+                console.log("binary:", iid, op, left, right, result, isOpAssign, isSwitchCaseComparison, isComputed);
+            }
+        };
+
+        this.literal = function(iid, val, hasGetterSetter) {
+            callStack.push("literal");
+            if (verbose) {
+                if (val instanceof Function) {
+                    val = "function"
+                }
+                console.log("literal:", iid, val, hasGetterSetter);
+            }
+        };
+
         this.getFieldPre = function(iid, base, offset, val, isComputed, isOpAssign, isMethodCall) {
+            callStack.push("getFieldPre" + offset);
+            if (verbose) {
+                console.log("getFieldPre:", iid, base, offset, val, isComputed, isOpAssign, isMethodCall);
+            }
             var i, ref;
             if (base instanceof Array) {
                 if (offset === 'length') {
                     if ((ref = getRef(base))) {
-                        console.log("Lock array " + ref.getReferences() + " at " + iidToLocation(iid));
-                        ref.lock();
+                        //console.log("Lock array " + ref.getReferences() + " at " + iidToLocation(iid));
+                        //ref.lock();
+                        checkLengthToLock = ref;
                     }
                 } else if (offset >= 0) {
                     if ((ref = getRef(base))) {
@@ -197,6 +332,10 @@
         };
 
         this.invokeFunPre = function(iid, f, base, args, result, isConstructor, isMethod, functionIid) {
+            callStack.push("invokeFunPre");
+            if (verbose) {
+                console.log("invokeFunPre:", iid);
+            }
             // Methods according to http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.4
             var ref;
             // TODO: slice may only lock used values
@@ -246,7 +385,56 @@
             }
         };
 
+        this.endExpression = function(iid) {
+            callStack.push("endExpression");
+            if (verbose) {
+                console.log(JSON.stringify(callStack));
+                console.log("endExpression:", iid);
+            }
+            if (checkLengthToLock !== null) {
+                var i, getFieldFound = false;
+                for(i=0; i <= callStack.length; i++) {
+                    if (callStack[i] === "getFieldPrelength") {
+                        getFieldFound = true;
+                    } else if (getFieldFound = true) {
+                        if (callStack[i] == "binary") {
+                            checkLengthToLock.lock();
+                            callStack = [];
+                            checkLengthToLock = null;
+                            lastPutField = null;
+                            return;
+                        }
+                    }
+                }
+                if (lastPutField !== null) {
+                    lastPutField[0].update(lastPutField[1], lastPutField[2]);
+                }
+            } else if (lastPutField !== null) {
+                var functionExitFound = false;
+                for (i = 0; i <= callStack.length; i++) {
+                    if (callStack[i] === "functionExit") {
+                        functionExitFound = true;
+                        lastPutField[0].lock(lastPutField[1]);
+                        // lock
+                        callStack = [];
+                        checkLengthToLock = null;
+                        lastPutField = null;
+                        return;
+                    }
+                }
+                lastPutField[0].update(lastPutField[1], lastPutField[2]);
+            }
+            callStack = [];
+            checkLengthToLock = null;
+            lastPutField = null;
+        };
+
         this.endExecution = function() {
+            callStack.push("endExecution");
+            if (verbose) {
+                console.log("endExecution:");
+            }
+            console.log(JSON.stringify(callStack));
             console.log();
             console.log("----------------------------------");
             for(var i = 0; i < initArrays.length; i++) {
@@ -258,8 +446,38 @@
                 out.push(initArrays[i].get());
             }
             console.log(JSON.stringify(out));
+        };
+
+        this.conditional = function(iid, result) {
+            callStack.push("conditional");
+            if (verbose) {
+                console.log("conditional:", iid, result);
+            }
+            if (inCondBranch == 0) {
+                inCondBranch = 1;
+            }
+        };
+
+        this.functionEnter = function(iid, f, dis, args) {
+            callStack.push("functionEnter");
+            if (verbose) {
+                console.log("functionEnter:", iid);
+            }
+            if (inCondBranch > 0) {
+                inCondBranch++;
+            }
+        };
+
+        this.functionExit = function(iid, returnVal, wrappedExceptionVal) {
+            callStack.push("functionExit");
+            if (verbose) {
+                console.log("functionExit:", iid, returnVal, wrappedExceptionVal);
+            }
+            if (inCondBranch > 0) {
+                inCondBranch--;
+            }
         }
     }
 
-    sandbox.analysis = new MyAnalysis();
+    sandbox.analysis = new Sherlock();
 })(J$);

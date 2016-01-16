@@ -1,0 +1,15 @@
+[
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "a": "foo",
+      "b": "bar"
+    },
+    "references": [
+      {
+        "name": "obj",
+        "loc": "line: 1"
+      }
+    ]
+  }
+]
