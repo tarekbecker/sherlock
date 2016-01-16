@@ -225,18 +225,19 @@
                 console.log("putFieldPre:", iid, base, offset, val, isComputed, isOpAssign);
             }
             var ref;
-            if ((ref = getRef(base)))
-            if (base instanceof Array && offset >= 0) {
-                // check if return value of function is assigned
-                lastPutField = { ref: ref, offset: offset, val: val};
-            } else if (base instanceof Object) {
-                if (val instanceof Function) {
-                    if (debug) {
-                        console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
+            if ((ref = getRef(base))) {
+                if (base instanceof Array && offset >= 0) {
+                    // check if return value of function is assigned
+                    lastPutField = {ref: ref, offset: offset, val: val};
+                } else if (base instanceof Object) {
+                    if (val instanceof Function) {
+                        if (debug) {
+                            console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
+                        }
+                        ref.lock(offset);
+                    } else {
+                        lastPutField = {ref: ref, offset: offset, val: val};
                     }
-                    ref.lock(offset);
-                } else {
-                    lastPutField = { ref: ref, offset: offset, val: val};
                 }
             }
         };
