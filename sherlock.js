@@ -11,7 +11,6 @@
         var logLevel = 0;
         var verbose = logLevel <= 0;
         var debug = logLevel <= 1;
-        var info = logLevel <= 2;
 
         var callStack = [];
         var checkLengthToLock = null;
@@ -179,13 +178,15 @@
             };
 
             this.debug = function() {
-                console.log("references " + JSON.stringify(references));
-                console.log("is opt " + JSON.stringify(isOpt));
-                console.log("opt version " + JSON.stringify(optVer));
-                console.log("allFree " + JSON.stringify(allFree));
-                console.log("locked " + JSON.stringify(locked));
-                console.log("locked values " + JSON.stringify(lockedValues));
-                console.log();
+                if (debug) {
+                    console.log("references " + JSON.stringify(references));
+                    console.log("is opt " + JSON.stringify(isOpt));
+                    console.log("opt version " + JSON.stringify(optVer));
+                    console.log("allFree " + JSON.stringify(allFree));
+                    console.log("locked " + JSON.stringify(locked));
+                    console.log("locked values " + JSON.stringify(lockedValues));
+                    console.log();
+                }
             };
 
             this.get = function() {
@@ -224,29 +225,18 @@
                 console.log("putFieldPre:", iid, base, offset, val, isComputed, isOpAssign);
             }
             var ref;
-            if (base instanceof Array) {
-                if ((ref = getRef(base))) {
-                    if (offset >= 0) {
-                        /*if (checkLengthToLock === null) {
-                            console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
-                              iidToLocation(iid));
-                            ref.update(offset, val);
-                        } else {*/
-                        // check if return value of function is assigned
-                            lastPutField = [ref,offset, val];
-                        //}
-                    }
-                }
-            } else if (base instanceof Object) {
-                if ((ref = getRef(base))) {
+            if ((ref = getRef(base))) {
+                if (base instanceof Array && offset >= 0) {
+                    // check if return value of function is assigned
+                    lastPutField = {ref: ref, offset: offset, val: val};
+                } else if (base instanceof Object) {
                     if (val instanceof Function) {
-                        console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
+                        if (debug) {
+                            console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
+                        }
                         ref.lock(offset);
                     } else {
-                        /*console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
-                            iidToLocation(iid));
-                        ref.update(offset, val);*/
-                        lastPutField = [ref,offset, val];
+                        lastPutField = {ref: ref, offset: offset, val: val};
                     }
                 }
             }
@@ -258,30 +248,20 @@
                 console.log("write:", iid, name, val, lhs, isGlobal, isScriptLocal);
             }
             var ref;
-            if (val instanceof Array) {
-                if ((ref = getRef(val))) {
-                    console.log("Add array reference " + name + " at " + iidToLocation(iid));
-                    ref.addRef(name, iid);
-                } else {
-                    console.log("Create array reference " + name + " at " + iidToLocation(iid));
-                    ref = new ArrayReference(val, name, iid);
-                    initArrays.push(ref);
+            if (ref = getRef(val)) {
+                if (debug) {
+                    console.log("Add reference " + name + " at " + iidToLocation(iid));
                 }
-                if (callStack[0] == "functionExit") {
-                    ref.lock();
+                ref.addRef(name, iid);
+            } else if (val instanceof Array || val instanceof Object) {
+                if (debug) {
+                    console.log("Create reference " + name + " at " + iidToLocation(iid));
                 }
-            } else if (val instanceof Object) {
-                if ((ref = getRef(val))) {
-                    console.log("Add object reference " + name + " at " + iidToLocation(iid));
-                    ref.addRef(name, iid);
-                } else {
-                    console.log("Create object reference " + name + " at " + iidToLocation(iid));
-                    ref = new ArrayReference(val, name, iid);
-                    initArrays.push(ref);
-                }
-                if (callStack[0] == "functionExit") {
-                    ref.lock();
-                }
+                ref = new ArrayReference(val, name, iid);
+                initArrays.push(ref);
+            }
+            if (ref && callStack[0] == "functionExit") {
+                ref.lock();
             }
         };
 
@@ -308,24 +288,14 @@
                 console.log("getFieldPre:", iid, base, offset, val, isComputed, isOpAssign, isMethodCall);
             }
             var i, ref;
-            if (base instanceof Array) {
-                if (offset === 'length') {
-                    if ((ref = getRef(base))) {
-                        //console.log("Lock array " + ref.getReferences() + " at " + iidToLocation(iid));
-                        //ref.lock();
-                        checkLengthToLock = ref;
+            if ((ref = getRef(base))) {
+                if (base instanceof Array && offset === 'length') {
+                    checkLengthToLock = ref;
+                } else {
+                    if (debug) {
+                        console.log("Lock " + ref.getReferences() + " element/property " + offset + " at " +
+                          iidToLocation(iid));
                     }
-                } else if (offset >= 0) {
-                    if ((ref = getRef(base))) {
-                        console.log("Lock array " + ref.getReferences() + " element " + offset + " at " +
-                            iidToLocation(iid));
-                        ref.lock(offset);
-                    }
-                }
-            } else if (base instanceof Object) {
-                if ((ref = getRef(base))) {
-                    console.log("Lock object " + ref.getReferences() + " element " + offset + " at " +
-                        iidToLocation(iid));
                     ref.lock(offset);
                 }
             }
@@ -338,7 +308,6 @@
             }
             // Methods according to http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.4
             var ref;
-            // TODO: slice may only lock used values
             var ignore = [Object.prototype.isPrototypeOf];
 
             var methodsLockObject = [
@@ -358,28 +327,18 @@
                 Array.prototype.unshift
             ];
 
-            if (callOnUnlocked.indexOf(f) !== -1) {
-                if ((ref = getRef(base))) {
+            if ((ref = getRef(base))) {
+                if (callOnUnlocked.indexOf(f) !== -1) {
                     ref.callOnUnlocked(f, args);
-                }
-            } else if (methodsLockArray.indexOf(f) !== -1 || methodsLockObject.indexOf(f) !== -1) {
-                if ((ref = getRef(base))) {
+                } else if (methodsLockArray.indexOf(f) !== -1 || methodsLockObject.indexOf(f) !== -1) {
                     ref.lock();
-                }
-            } else if (f == Array.prototype.concat) {
-                if ((ref = getRef(base))) {
+                } else if (f == Array.prototype.concat) {
                     ref.concat(args)
-                }
-            } else if (f === Array.prototype.push) {
-                if ((ref = getRef(base))) {
+                } else if (f === Array.prototype.push) {
                     ref.push(args["0"]);
-                }
-            } else if (f === Array.prototype.pop) {
-                if ((ref = getRef(base))) {
+                } else if (f === Array.prototype.pop) {
                     ref.pop();
-                }
-            } else if (f === Object.prototype.propertyIsEnumerable) {
-                if ((ref = getRef(base))) {
+                } else if (f === Object.prototype.propertyIsEnumerable) {
                     ref.lock(args[0]);
                 }
             }
@@ -407,14 +366,14 @@
                     }
                 }
                 if (lastPutField !== null) {
-                    lastPutField[0].update(lastPutField[1], lastPutField[2]);
+                    lastPutField.ref.update(lastPutField.offset, lastPutField.val);
                 }
             } else if (lastPutField !== null) {
                 var functionExitFound = false;
                 for (i = 0; i <= callStack.length; i++) {
                     if (callStack[i] === "functionExit") {
                         functionExitFound = true;
-                        lastPutField[0].lock(lastPutField[1]);
+                        lastPutField.ref.lock(lastPutField.offset);
                         // lock
                         callStack = [];
                         checkLengthToLock = null;
@@ -422,7 +381,7 @@
                         return;
                     }
                 }
-                lastPutField[0].update(lastPutField[1], lastPutField[2]);
+                lastPutField.ref.update(lastPutField.offset, lastPutField.val);
             }
             callStack = [];
             checkLengthToLock = null;
@@ -434,18 +393,21 @@
             if (verbose) {
                 console.log("endExecution:");
             }
-            console.log(JSON.stringify(callStack));
-            console.log();
-            console.log("----------------------------------");
-            for(var i = 0; i < initArrays.length; i++) {
-                initArrays[i].debug();
-            }
+            if (debug) {
+                console.log(JSON.stringify(callStack));
+                console.log();
+                console.log("----------------------------------");
 
-            var out = [];
-            for(i = 0; i < initArrays.length; i++) {
-                out.push(initArrays[i].get());
+                for (var i = 0; i < initArrays.length; i++) {
+                    initArrays[i].debug();
+                }
+
+                var out = [];
+                for (i = 0; i < initArrays.length; i++) {
+                    out.push(initArrays[i].get());
+                }
+                console.log(JSON.stringify(out));
             }
-            console.log(JSON.stringify(out));
         };
 
         this.conditional = function(iid, result) {
