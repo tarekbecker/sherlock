@@ -8,6 +8,15 @@
 
         var inCondBranch = 0;
 
+        var logLevel = 0;
+        var verbose = logLevel <= 0;
+        var debug = logLevel <= 1;
+        var info = logLevel <= 2;
+
+        var callStack = [];
+        var checkLengthToLock = null;
+        var lastPutField = null;
+
         var iidToLocation = function(iid) {
             var loc = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(":").slice(-4, -2);
             return "line: " + loc[0];
@@ -210,13 +219,21 @@
         };
 
         this.putFieldPre = function(iid, base, offset, val, isComputed, isOpAssign) {
+            callStack.push("putFieldPre");
+            if (verbose) {
+                console.log("putFieldPre:", iid, base, offset, val, isComputed, isOpAssign);
+            }
             var ref;
             if (base instanceof Array) {
                 if ((ref = getRef(base))) {
                     if (offset >= 0) {
-                        console.log("Update " + ref.getReferences() + "[" + offset +"] = " + val + " at " +
-                            iidToLocation(iid));
-                        ref.update(offset, val);
+                        /*if (checkLengthToLock === null) {
+                            console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
+                              iidToLocation(iid));
+                            ref.update(offset, val);
+                        } else {*/
+                            lastPutField = [ref,offset, val];
+                        //}
                     }
                 }
             } else if (base instanceof Object) {
@@ -234,6 +251,10 @@
         };
 
         this.write = function(iid, name, val, lhs, isGlobal, isScriptLocal) {
+            callStack.push("write");
+            if (verbose) {
+                console.log("write:", iid, name, val, lhs, isGlobal, isScriptLocal);
+            }
             var ref;
             if (val instanceof Array) {
                 if ((ref = getRef(val))) {
@@ -254,13 +275,32 @@
             }
         };
 
+        this.binary = function(iid, op, left, right, result, isOpAssign, isSwitchCaseComparison, isComputed) {
+            callStack.push("binary");
+            if (verbose) {
+                console.log("binary:", iid, op, left, right, result, isOpAssign, isSwitchCaseComparison, isComputed);
+            }
+        };
+
+        this.literal = function(iid, val, hasGetterSetter) {
+            callStack.push("literal" + val);
+            if (verbose) {
+                console.log("literal:", iid, val, hasGetterSetter);
+            }
+        };
+
         this.getFieldPre = function(iid, base, offset, val, isComputed, isOpAssign, isMethodCall) {
+            callStack.push("getFieldPre" + offset);
+            if (verbose) {
+                console.log("getFieldPre:", iid, base, offset, val, isComputed, isOpAssign, isMethodCall);
+            }
             var i, ref;
             if (base instanceof Array) {
                 if (offset === 'length') {
                     if ((ref = getRef(base))) {
-                        console.log("Lock array " + ref.getReferences() + " at " + iidToLocation(iid));
-                        ref.lock();
+                        //console.log("Lock array " + ref.getReferences() + " at " + iidToLocation(iid));
+                        //ref.lock();
+                        checkLengthToLock = ref;
                     }
                 } else if (offset >= 0) {
                     if ((ref = getRef(base))) {
@@ -279,6 +319,10 @@
         };
 
         this.invokeFunPre = function(iid, f, base, args, result, isConstructor, isMethod, functionIid) {
+            callStack.push("invokeFunPre");
+            if (verbose) {
+                console.log("invokeFunPre:", iid, f, base, args, result, isConstructor, isMethod, functionIid);
+            }
             // Methods according to http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.4
             var ref;
             // TODO: slice may only lock used values
@@ -328,7 +372,56 @@
             }
         };
 
+        this.endExpression = function(iid) {
+            callStack.push("endExpression");
+            if (verbose) {
+                console.log(JSON.stringify(callStack));
+                console.log("endExpression:", iid);
+            }
+            if (checkLengthToLock !== null) {
+                var i, getFieldFound = false;
+                for(i=0; i <= callStack.length; i++) {
+                    if (callStack[i] === "getFieldPrelength") {
+                        getFieldFound = true;
+                    } else if (getFieldFound = true) {
+                        if (callStack[i] == "binary") {
+                            checkLengthToLock.lock();
+                            callStack = [];
+                            checkLengthToLock = null;
+                            lastPutField = null;
+                            return;
+                        }
+                    }
+                }
+                if (lastPutField !== null) {
+                    lastPutField[0].update(lastPutField[1], lastPutField[2]);
+                }
+            } else if (lastPutField !== null) {
+                var functionExitFound = false;
+                for (i = 0; i <= callStack.length; i++) {
+                    if (callStack[i] === "functionExit") {
+                        functionExitFound = true;
+                        lastPutField[0].lock(lastPutField[1]);
+                        // lock
+                        callStack = [];
+                        checkLengthToLock = null;
+                        lastPutField = null;
+                        return;
+                    }
+                }
+                lastPutField[0].update(lastPutField[1], lastPutField[2]);
+            }
+            callStack = [];
+            checkLengthToLock = null;
+            lastPutField = null;
+        };
+
         this.endExecution = function() {
+            callStack.push("endExecution");
+            if (verbose) {
+                console.log("endExecution:");
+            }
+            console.log(JSON.stringify(callStack));
             console.log();
             console.log("----------------------------------");
             for(var i = 0; i < initArrays.length; i++) {
@@ -343,18 +436,30 @@
         };
 
         this.conditional = function(iid, result) {
+            callStack.push("conditional");
+            if (verbose) {
+                console.log("conditional:", iid, result);
+            }
             if (inCondBranch == 0) {
                 inCondBranch = 1;
             }
         };
 
         this.functionEnter = function(iid, f, dis, args) {
+            callStack.push("functionEnter");
+            if (verbose) {
+                console.log("functionEnter:", iid, f, dis, args);
+            }
             if (inCondBranch > 0) {
                 inCondBranch++;
             }
         };
 
         this.functionExit = function(iid, returnVal, wrappedExceptionVal) {
+            callStack.push("functionExit");
+            if (verbose) {
+                console.log("functionExit:", iid, returnVal, wrappedExceptionVal);
+            }
             if (inCondBranch > 0) {
                 inCondBranch--;
             }
