@@ -232,6 +232,7 @@
                               iidToLocation(iid));
                             ref.update(offset, val);
                         } else {*/
+                        // check if return value of function is assigned
                             lastPutField = [ref,offset, val];
                         //}
                     }
@@ -242,9 +243,10 @@
                         console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
                         ref.lock(offset);
                     } else {
-                        console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
+                        /*console.log("Update " + ref.getReferences() + "[" + offset + "] = " + val + " at " +
                             iidToLocation(iid));
-                        ref.update(offset, val);
+                        ref.update(offset, val);*/
+                        lastPutField = [ref,offset, val];
                     }
                 }
             }
@@ -262,7 +264,11 @@
                     ref.addRef(name, iid);
                 } else {
                     console.log("Create array reference " + name + " at " + iidToLocation(iid));
-                    initArrays.push(new ArrayReference(val, name, iid));
+                    ref = new ArrayReference(val, name, iid);
+                    initArrays.push(ref);
+                }
+                if (callStack[0] == "functionExit") {
+                    ref.lock();
                 }
             } else if (val instanceof Object) {
                 if ((ref = getRef(val))) {
@@ -270,7 +276,11 @@
                     ref.addRef(name, iid);
                 } else {
                     console.log("Create object reference " + name + " at " + iidToLocation(iid));
-                    initArrays.push(new ArrayReference(val, name, iid));
+                    ref = new ArrayReference(val, name, iid);
+                    initArrays.push(ref);
+                }
+                if (callStack[0] == "functionExit") {
+                    ref.lock();
                 }
             }
         };
@@ -283,8 +293,11 @@
         };
 
         this.literal = function(iid, val, hasGetterSetter) {
-            callStack.push("literal" + val);
+            callStack.push("literal");
             if (verbose) {
+                if (val instanceof Function) {
+                    val = "function"
+                }
                 console.log("literal:", iid, val, hasGetterSetter);
             }
         };
@@ -321,7 +334,7 @@
         this.invokeFunPre = function(iid, f, base, args, result, isConstructor, isMethod, functionIid) {
             callStack.push("invokeFunPre");
             if (verbose) {
-                console.log("invokeFunPre:", iid, f, base, args, result, isConstructor, isMethod, functionIid);
+                console.log("invokeFunPre:", iid);
             }
             // Methods according to http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.4
             var ref;
@@ -448,7 +461,7 @@
         this.functionEnter = function(iid, f, dis, args) {
             callStack.push("functionEnter");
             if (verbose) {
-                console.log("functionEnter:", iid, f, dis, args);
+                console.log("functionEnter:", iid);
             }
             if (inCondBranch > 0) {
                 inCondBranch++;

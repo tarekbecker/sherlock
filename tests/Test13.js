@@ -10,6 +10,22 @@ a.number2 = add(5,10);
 
 a.number = 10;
 
+var person ={};
+
+person.firstName = "David";
+person.lastName = "Guesewell";
+person.phoneNumber = 61052;
+
+function getFullName(person)
+{
+  return  person.firstName+' '+person.lastName;
+}
+
+var fullname = getFullName(person);
+
+person.firstName = "Tarek";
+
+
 var array3 = [5];
 
 array3.push(10);
@@ -26,18 +42,3 @@ function add(a,b) {
 
     return a + b;
 }
-
-var person ={};
-
-person.firstName = "David";
-person.lastName = "Guesewell";
-person.phoneNumber = 61052;
-
-function getFullName(person)
-{
- return  person.firstName+' '+person.lastName;
-}
-
-var fullname = getFullName(person);
-
-person.firstName = "Tarek";

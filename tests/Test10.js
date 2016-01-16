@@ -2,7 +2,7 @@ var array = [0, 1];
 var tmp = array.toString();
 array[1] = 2;
 
-var array2 = [0, 1]
+var array2 = [0, 1];
 var tmp2 = array2.toLocaleString();
 array2[1] = 2;
 
@@ -62,9 +62,7 @@ array14[1] = 2;
 
 
 function compare(currentValue) {
-    if (currentValue > 1)
-        return true;
-    else return false;
+    return currentValue > 1;
 }
 
 function increase(currentValue) {

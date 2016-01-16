@@ -73,20 +73,7 @@
     "references": [
       {
         "name": "array6",
-        "loc": "line: 22"
-      }
-    ]
-  },
-  {
-    "isOptimized": false,
-    "optimizedVersion": [
-      0,
-      1
-    ],
-    "references": [
-      {
-        "name": "array6",
-        "loc": "line: 26"
+        "loc": "line: 21"
       }
     ]
   },
@@ -99,7 +86,7 @@
     "references": [
       {
         "name": "array7",
-        "loc": "line: 30"
+        "loc": "line: 25"
       }
     ]
   },
@@ -112,7 +99,7 @@
     "references": [
       {
         "name": "array8",
-        "loc": "line: 34"
+        "loc": "line: 29"
       }
     ]
   },
@@ -124,8 +111,8 @@
     ],
     "references": [
       {
-        "name": "tmp",
-        "loc": "line: 35"
+        "name": "tmp8",
+        "loc": "line: 30"
       }
     ]
   },
@@ -138,7 +125,7 @@
     "references": [
       {
         "name": "array9",
-        "loc": "line: 38"
+        "loc": "line: 33"
       }
     ]
   },
@@ -151,7 +138,7 @@
     "references": [
       {
         "name": "array10",
-        "loc": "line: 44"
+        "loc": "line: 39"
       }
     ]
   },
@@ -164,7 +151,7 @@
     "references": [
       {
         "name": "array11",
-        "loc": "line: 50"
+        "loc": "line: 45"
       }
     ]
   },
@@ -177,7 +164,7 @@
     "references": [
       {
         "name": "array12",
-        "loc": "line: 56"
+        "loc": "line: 51"
       }
     ]
   },
@@ -190,17 +177,19 @@
     "references": [
       {
         "name": "array13",
-        "loc": "line: 60"
+        "loc": "line: 55"
       }
     ]
   },
   {
     "isOptimized": false,
-    "optimizedVersion": [],
+    "optimizedVersion": [
+
+    ],
     "references": [
       {
-        "name": "tmp",
-        "loc": "line: 61"
+        "name": "tmp13",
+        "loc": "line: 56"
       }
     ]
   },
@@ -214,7 +203,7 @@
     "references": [
       {
         "name": "array14",
-        "loc": "line: 64"
+        "loc": "line: 59"
       }
     ]
   },
@@ -226,8 +215,8 @@
     ],
     "references": [
       {
-        "name": "tmp",
-        "loc": "line: 65"
+        "name": "tmp14",
+        "loc": "line: 60"
       }
     ]
   }

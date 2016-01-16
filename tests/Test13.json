@@ -13,7 +13,7 @@
     ]
   },
   {
-    "isOptimized": true,
+    "isOptimized": false,
     "optimizedVersion": [
       5,
       10
@@ -40,19 +40,6 @@
   },
   {
     "isOptimized": true,
-    "optimizedVersion": [
-      5,
-      10
-    ],
-    "references": [
-      {
-        "name": "array3",
-        "loc": "line: 13"
-      }
-    ]
-  },
-  {
-    "isOptimized": true,
     "optimizedVersion": {
       "firstName": "David",
       "lastName": "Guesewell",
@@ -61,7 +48,20 @@
     "references": [
       {
         "name": "person",
-        "loc": "line: 30"
+        "loc": "line: 13"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      5,
+      10
+    ],
+    "references": [
+      {
+        "name": "array3",
+        "loc": "line: 29"
       }
     ]
   }
