@@ -1,6 +1,6 @@
 // do not remove the following comment
 // JALANGI DO NOT INSTRUMENT
-
+var util = require('util');
 
 (function (sandbox) {
 
@@ -8,7 +8,7 @@
 
         var inCondBranch = 0;
 
-        var logLevel = 0;
+        var logLevel = 1;
         var verbose = logLevel <= 0;
         var debug = logLevel <= 1;
 
@@ -21,8 +21,28 @@
             return "line: " + loc[0];
         };
 
+        function copy(obj) {
+            var i, result;
+            if (obj instanceof Array) {
+                result = [];
+                for(i = 0; i < obj.length; i++) {
+                    result.push(obj[i]);
+                }
+            } else if (obj instanceof Object) {
+                result = {};
+                for (prop in obj) {
+                    if (obj.hasOwnProperty(prop)) {
+                        result[prop] = obj[prop];
+                    }
+                }
+
+            }
+            return result;
+        }
+
         function ArrayReference(base, name, iid) {
-            var optVer = JSON.parse(JSON.stringify(base));
+            //var optVer = JSON.parse(JSON.stringify(base));
+            var optVer = copy(base);
             var isOpt = false;
             var locked = false;
             var lockedValues = {};
@@ -179,17 +199,20 @@
 
             this.debug = function() {
                 if (debug) {
-                    console.log("references " + JSON.stringify(references));
+                    /*console.log("references " + JSON.stringify(references));
                     console.log("is opt " + JSON.stringify(isOpt));
                     console.log("opt version " + JSON.stringify(optVer));
                     console.log("allFree " + JSON.stringify(allFree));
                     console.log("locked " + JSON.stringify(locked));
                     console.log("locked values " + JSON.stringify(lockedValues));
-                    console.log();
+                    console.log();*/
                 }
             };
 
             this.get = function() {
+                if (util.inspect(optVer, {depth: 0}).indexOf("[Object]") !== -1) {
+                    optVer = "Object"
+                }
                 return {
                     isOptimized: isOpt,
                     optimizedVersion: optVer,
@@ -245,7 +268,7 @@
         this.write = function(iid, name, val, lhs, isGlobal, isScriptLocal) {
             callStack.push("write");
             if (verbose) {
-                console.log("write:", iid, name, val, lhs, isGlobal, isScriptLocal);
+                console.log("write:", iid, name);
             }
             var ref;
             if (ref = getRef(val)) {
@@ -397,17 +420,17 @@
                 console.log(JSON.stringify(callStack));
                 console.log();
                 console.log("----------------------------------");
-
-                for (var i = 0; i < initArrays.length; i++) {
-                    initArrays[i].debug();
-                }
-
-                var out = [];
-                for (i = 0; i < initArrays.length; i++) {
-                    out.push(initArrays[i].get());
-                }
-                console.log(JSON.stringify(out));
             }
+            for (var i = 0; i < initArrays.length; i++) {
+                initArrays[i].debug();
+            }
+
+            var out = [];
+            for (i = 0; i < initArrays.length; i++) {
+                out.push(initArrays[i].get());
+            }
+            console.log(JSON.stringify(out));
+
         };
 
         this.conditional = function(iid, result) {

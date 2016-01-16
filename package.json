@@ -7,7 +7,7 @@
   "devDependencies": {},
   "private": true,
   "scripts": {
-    "test": "./testrunner.py"
+    "test": "./test.sh"
   },
   "repository": {
     "type": "git",
