@@ -126,11 +126,11 @@
              * Implementation for array.pop
              */
             this.pop = function() {
-                if (checkLock(optVer.length + 1)) {
+                if (checkLock(optVer.length - 1)) {
                     optVer.pop();
                     isOpt = true;
                 } else {
-                    lockedValues[optVer.length + 1] = true;
+                    lockedValues[optVer.length - 1] = true;
                 }
             };
 
