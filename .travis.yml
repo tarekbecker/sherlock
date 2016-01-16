@@ -6,8 +6,7 @@ before_install:
   - "git clone https://github.com/Samsung/jalangi2 ~/jalangi2 && (cd ~/jalangi2; npm install)"
   - "git clone https://github.com/dai-shi/benchmark-octane.git ~/octane"
 env:
-  - jalangi=~/jalangi2
-  - octane=~/octane
+  - jalangi=~/jalangi2 octane=~/octane
 addons:
   apt:
     packages:
