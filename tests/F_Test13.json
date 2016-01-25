@@ -1,10 +1,9 @@
 [
     {
-        "isOptimized": true,
+        "isOptimized": false,
         "optimizedVersion": [
             0,
-            1,
-            2
+            1
         ],
         "references": [
             {
