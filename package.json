@@ -3,11 +3,15 @@
   "version": "0.0.1",
   "description": "",
   "main": "sherlock.js",
-  "dependencies": {},
+  "dependencies": {
+    "escodegen": "^1.8.0",
+    "esprima": "^2.7.1",
+    "estraverse": "^4.1.1"
+  },
   "devDependencies": {},
   "private": true,
   "scripts": {
-    "test": "./testrunner.py"
+    "test": "./test.sh"
   },
   "repository": {
     "type": "git",

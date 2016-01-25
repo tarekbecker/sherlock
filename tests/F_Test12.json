@@ -3,7 +3,8 @@
         "isOptimized": true,
         "optimizedVersion": [
             5,
-            2
+            2,
+            3
         ],
         "references": [
             {
@@ -15,13 +16,12 @@
         "isOptimized": true,
         "optimizedVersion": [
             1,
-            2,
             3,
-            4
+            3
         ],
         "references": [
             {
-                "name": "a"
+                "name": "b"
             }
         ]
     }

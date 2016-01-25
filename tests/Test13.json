@@ -1,68 +1,63 @@
 [
-  {
-    "isOptimized": true,
-    "optimizedVersion": [
-      0,
-      1
-    ],
-    "references": [
-      {
-        "name": "array",
-        "loc": "line: 1"
-      }
-    ]
-  },
-  {
-    "isOptimized": false,
-    "optimizedVersion": [
-      5,
-      10
-    ],
-    "references": [
-      {
-        "name": "array2",
-        "loc": "line: 2"
-      }
-    ]
-  },
-  {
-    "isOptimized": true,
-    "optimizedVersion": {
-      "text": "text",
-      "number": 10
+    {
+        "isOptimized": true,
+        "optimizedVersion": [
+            0,
+            1
+        ],
+        "references": [
+            {
+                "name": "array"
+            }
+        ]
     },
-    "references": [
-      {
-        "name": "a",
-        "loc": "line: 3"
-      }
-    ]
-  },
-  {
-    "isOptimized": true,
-    "optimizedVersion": {
-      "firstName": "David",
-      "lastName": "Guesewell",
-      "phoneNumber": 61052
+    {
+        "isOptimized": false,
+        "optimizedVersion": [
+            5,
+            10
+        ],
+        "references": [
+            {
+                "name": "array2"
+            }
+        ]
     },
-    "references": [
-      {
-        "name": "person",
-        "loc": "line: 13"
-      }
-    ]
-  },
-  {
-    "isOptimized": true,
-    "optimizedVersion": [
-      5,
-      10
-    ],
-    "references": [
-      {
-        "name": "array3",
-        "loc": "line: 29"
-      }
-    ]
-  }
+    {
+        "isOptimized": true,
+        "optimizedVersion": {
+            "number": 10,
+            "text": "text"
+        },
+        "references": [
+            {
+                "name": "a"
+            }
+        ]
+    },
+    {
+        "isOptimized": true,
+        "optimizedVersion": {
+            "firstName": "David",
+            "lastName": "Guesewell",
+            "phoneNumber": 61052
+        },
+        "references": [
+            {
+                "name": "person"
+            }
+        ]
+    },
+    {
+        "isOptimized": true,
+        "optimizedVersion": [
+            5,
+            10
+        ],
+        "references": [
+            {
+                "name": "array3"
+            }
+        ]
+    }
 ]

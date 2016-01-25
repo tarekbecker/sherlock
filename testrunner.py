@@ -14,7 +14,8 @@ def check_extension(file, ext):
 defaults = {
     'jalangi': './jalangi2',
     'sherlock': './sherlock.js',
-    'tests': './tests'
+    'tests': './tests',
+    'only': None,
 }
 
 parser = argparse.ArgumentParser()
@@ -40,13 +41,17 @@ for file in os.listdir(d['tests']):
         if check_extension(file, 'json'):
             with open(os.path.join(d['tests'], file), 'r') as result_file:
                 result = json.loads('{ "result":' + result_file.read() + '}')
+                command = 'node preprocess.js ' + d['tests'] + '/' + test + \
+                          ' ' + d['tests'] + '/' + test[:-3] + '_processed.js'
+                p = subprocess.Popen(command, shell=True,stdout=None, stderr=None)
+                p.wait()
                 command = 'node ' + d['jalangi'] + \
                           '/src/js/commands/jalangi.js ' +\
                           '--inlineIID --inlineSource --analysis ' + \
                           d['jalangi'] + \
                           '/src/js/sample_analyses/ChainedAnalyses.js ' + \
                           ' --analysis ' + d['sherlock'] + ' ' + \
-                          d['tests'] + '/' + test
+                          d['tests'] + '/' + test[:-3] + '_processed.js'
                 p = subprocess.Popen(command, shell=True,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT)
@@ -67,9 +72,11 @@ for file in os.listdir(d['tests']):
                     print stdout
                 try:
                     os.remove(os.path.join(d['tests'], test[:-3] +
-                                           '_jalangi_.js'))
+                                        '_processed.js'))
                     os.remove(os.path.join(d['tests'], test[:-3] +
-                                           '_jalangi_.json'))
+                                           '_processed_jalangi_.js'))
+                    os.remove(os.path.join(d['tests'], test[:-3] +
+                                           '_processed_jalangi_.json'))
                 except OSError:
                     sys.stderr.write('Error while removing files\n')
         test = None

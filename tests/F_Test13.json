@@ -1,13 +1,13 @@
 [
     {
-        "isOptimized": true,
+        "isOptimized": false,
         "optimizedVersion": [
-            1,
-            7
+            0,
+            1
         ],
         "references": [
             {
-                "name": "a"
+                "name": "array"
             }
         ]
     }
