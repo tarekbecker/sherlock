@@ -45,7 +45,7 @@ var util = require('util');
             return result;
         }
 
-        function ArrayReference(base, name, iid) {
+        function Reference(base, name, iid) {
             //var optVer = JSON.parse(JSON.stringify(base));
             var optVer = copy(base);
             var isOpt = false;
@@ -81,7 +81,7 @@ var util = require('util');
 
             /**
              * Checks if a given index of the reference is blocked. If the reference is null
-             * it will just check if the full element is not blocked and it's not in a
+             * it will just check if the full reference is not blocked and it's not in a
              * conditional branch right now
              *
              * @param index the index that should be checked, either an int for arrays, any
@@ -196,14 +196,14 @@ var util = require('util');
 
             /**
              * Lock a value of a reference by it's index
-             * @param num index that should be logged, if num === undefined
+             * @param index index that should be logged, if num === undefined
              * or (num === "length" && isArray()) the total element will be locked
              */
-            this.lock = function(num) {
-                if (num === undefined || (num === "length" && isArray())) {
+            this.lock = function(index) {
+                if (index === undefined || (index === "length" && isArray())) {
                     locked = true;
                 } else {
-                    lockedValues[num] = true;
+                    lockedValues[index] = true;
                 }
             };
 
@@ -290,7 +290,7 @@ var util = require('util');
                 if (debug) {
                     console.log("Create reference " + name + " at " + iidToLocation(iid));
                 }
-                ref = new ArrayReference(val, name, iid);
+                ref = new Reference(val, name, iid);
                 initArrays.push(ref);
             }
             if (ref && callStack[0] == "functionExit") {
@@ -455,6 +455,7 @@ var util = require('util');
         };
 
         this.conditional = function(iid, result) {
+            console.log('conditional');
             callStack.push("conditional");
             if (verbose) {
                 console.log("conditional:");

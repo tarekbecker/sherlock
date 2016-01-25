@@ -14,6 +14,14 @@ function createDummyLiteral() {
   }
 }
 
+function countLogicalExpressions(node) {
+  if(node.type === 'LogicalExpression') {
+    return 1 + countLogicalExpressions(node.left) + countLogicalExpressions(node.right)
+  } else {
+    return 0;
+  }
+}
+
 function createBlock(content) {
   return {
     type: 'BlockStatement',
@@ -21,20 +29,24 @@ function createBlock(content) {
   };
 }
 
-function addStatementInBlock(parent, nodeBefore, added) {
+function addStatementInBlock(parent, nodeBefore, added, cnt) {
+  var i;
   if (nodeBefore !== null) {
-    var i = 0;
-    for (; i < parent.body.length; i++) {
+    for (i = 0; i < parent.body.length; i++) {
       if (parent.body[i] == nodeBefore) {
         break;
       }
     }
-    parent.body.splice(i + 1, 0, added);
+    for (; cnt > 0; cnt--) {
+      parent.body.splice(i + 1, 0, added);
+    }
   } else {
     if (!(parent.body.body instanceof Array)) {
       parent.body = createBlock(parent.body)
     }
-    parent.body.body.push(added);
+    for (; cnt > 0; cnt--) {
+      parent.body.body.push(added);
+    }
   }
 }
 
@@ -45,14 +57,14 @@ var ast = esprima.parse(fs.readFileSync(filename));
 estraverse.traverse(ast, {
   enter: function(node) {
     if(node.type === 'ForStatement' || node.type === 'WhileStatement') {
-      addStatementInBlock(node, null, createDummyLiteral())
+      addStatementInBlock(node, null, createDummyLiteral(), countLogicalExpressions(node.test) + 1)
     }
   },
   leave: function(node, parent) {
     if(node.type === 'IfStatement' || node.type === 'WhileStatement') {
-      addStatementInBlock(parent, node, createDummyLiteral())
+      addStatementInBlock(parent, node, createDummyLiteral(), countLogicalExpressions(node.test) + 1)
     } else if(node.type === 'ForStatement') {
-      addStatementInBlock(parent, node, createDummyLiteral())
+      addStatementInBlock(parent, node, createDummyLiteral(), countLogicalExpressions(node.test) + 1)
     }
   }
 });
