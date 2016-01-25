@@ -1,1 +1,11 @@
-[{"optimizedVersion":[], "isOptimized":false,"references":[{"name":"a","loc":"line: 4"}]}]
+[
+    {
+        "isOptimized": false,
+        "optimizedVersion": [],
+        "references": [
+            {
+                "name": "a"
+            }
+        ]
+    }
+]

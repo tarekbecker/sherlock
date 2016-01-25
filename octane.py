@@ -31,16 +31,24 @@ passed_tests = []
 failed_tests = []
 failed_tests_output = []
 test = None
-command = 'node ' + d['jalangi'] + \
-          '/src/js/commands/jalangi.js ' +\
-          '--inlineIID --inlineSource --analysis ' + \
-          d['jalangi'] + \
-          '/src/js/sample_analyses/ChainedAnalyses.js ' + \
-          ' --analysis ' + d['sherlock'] + ' ' + \
-          d['octane'] + '/run.js'
-p = subprocess.Popen(command, shell=True,
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.STDOUT)
-lines = p.stdout.readlines()
-for l in lines:
-    print l
+
+#test_list = ['box2d','code-load','crypto','deltablue','earley-boyer','gbemu','navier-stokes','pdfjs',
+#             'raytrace','regexp','richards','splay','typescript']
+test_list = ['richards']
+
+with open('output.txt', 'wb') as f:
+    for t in test_list:
+        command = 'node preprocess.js ' + d['jalangi'] + '/tests/octane/'  + '/' + t + '.js' + \
+                  ' ' + d['jalangi'] + '/tests/octane/'  + '/' + t + '_processed.js'
+        p = subprocess.Popen(command, shell=True,stdout=None, stderr=None)
+        p.wait()
+        command = 'node ' + d['jalangi'] + \
+                  '/src/js/commands/jalangi.js ' +\
+                  '--inlineIID --inlineSource ' + \
+                  ' --analysis ' + d['sherlock'] + ' ' + \
+                  d['jalangi'] + '/tests/octane/' + t + '_processed.js'
+        p = subprocess.Popen(command, shell=True,
+                             stdout=f,
+                             stderr=f)
+        p.wait()
+        print 'finished', t

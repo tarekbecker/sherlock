@@ -1,14 +1,13 @@
 [
-  {
-    "isOptimized": false,
-    "optimizedVersion": [
-      0
-    ],
-    "references": [
-      {
-        "name": "array",
-        "loc": "line: 1"
-      }
-    ]
-  }
+    {
+        "isOptimized": false,
+        "optimizedVersion": [
+            0
+        ],
+        "references": [
+            {
+                "name": "array"
+            }
+        ]
+    }
 ]

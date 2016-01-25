@@ -1,1 +1,25 @@
-[{"isOptimized":false,"optimizedVersion":[0,2],"references":[{"name":"array","loc":"line: 1"}]},{"isOptimized":false,"optimizedVersion":{"a":2},"references":[{"name":"obj","loc":"line: 2"}]}]
+[
+    {
+        "isOptimized": false,
+        "optimizedVersion": [
+            0,
+            2
+        ],
+        "references": [
+            {
+                "name": "array"
+            }
+        ]
+    },
+    {
+        "isOptimized": false,
+        "optimizedVersion": {
+            "a": 2
+        },
+        "references": [
+            {
+                "name": "obj"
+            }
+        ]
+    }
+]

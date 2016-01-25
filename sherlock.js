@@ -6,15 +6,20 @@ var util = require('util');
 
     function Sherlock () {
 
-        var inCondBranch = 0;
+        var inCondBranchFunc = 0;
+        var inCondBranchLiteral = 0;
 
-        var logLevel = 1;
-        var verbose = logLevel <= 0;
-        var debug = logLevel <= 1;
+        var conditionalLevel = 0;
+
+        var logLevel = 2;
+        var verbose = false;
+        var debug = false;
 
         var callStack = [];
         var checkLengthToLock = null;
         var lastPutField = null;
+
+        var refInCond = [];
 
         var iidToLocation = function(iid) {
             var loc = sandbox.iidToLocation(J$.getGlobalIID(iid)).split(":").slice(-4, -2);
@@ -47,6 +52,11 @@ var util = require('util');
             var locked = false;
             var lockedValues = {};
             var references = [];
+            var condLevel = conditionalLevel;
+
+            if (condLevel != 0) {
+                refInCond.push(this);
+            }
 
             /**
              * Check if no index of the reference (either an array or an object) is blocked.
@@ -81,7 +91,7 @@ var util = require('util');
              */
             var checkLock = function(index) {
                 if (index === undefined) {
-                    return (!locked && inCondBranch == 0);
+                    return (!locked && condLevel >= conditionalLevel);
                 } else {
                     return (checkLock() && !lockedValues[index])
                 }
@@ -245,7 +255,7 @@ var util = require('util');
         this.putFieldPre = function(iid, base, offset, val, isComputed, isOpAssign) {
             callStack.push("putFieldPre");
             if (verbose) {
-                console.log("putFieldPre:", iid, base, offset, val, isComputed, isOpAssign);
+                console.log("putFieldPre");
             }
             var ref;
             if ((ref = getRef(base))) {
@@ -291,24 +301,32 @@ var util = require('util');
         this.binary = function(iid, op, left, right, result, isOpAssign, isSwitchCaseComparison, isComputed) {
             callStack.push("binary");
             if (verbose) {
-                console.log("binary:", iid, op, left, right, result, isOpAssign, isSwitchCaseComparison, isComputed);
+                console.log("binary");
             }
         };
 
         this.literal = function(iid, val, hasGetterSetter) {
+            if (val === 'da0b52b0ab43721cda3399320ca940a5a0e571ee') {
+                return this.conditionalMerge(iid);
+            }
             callStack.push("literal");
             if (verbose) {
                 if (val instanceof Function) {
                     val = "function"
                 }
-                console.log("literal:", iid, val, hasGetterSetter);
+                console.log("literal");
             }
+        };
+
+        this.conditionalMerge = function(iid) {
+            callStack.push("conditionalMerge");
+            conditionalLevel--;
         };
 
         this.getFieldPre = function(iid, base, offset, val, isComputed, isOpAssign, isMethodCall) {
             callStack.push("getFieldPre" + offset);
             if (verbose) {
-                console.log("getFieldPre:", iid, base, offset, val, isComputed, isOpAssign, isMethodCall);
+                console.log("getFieldPre");
             }
             var i, ref;
             if ((ref = getRef(base))) {
@@ -327,7 +345,7 @@ var util = require('util');
         this.invokeFunPre = function(iid, f, base, args, result, isConstructor, isMethod, functionIid) {
             callStack.push("invokeFunPre");
             if (verbose) {
-                console.log("invokeFunPre:", iid);
+                console.log("invokeFunPre");
             }
             // Methods according to http://www.ecma-international.org/ecma-262/5.1/#sec-15.4.4
             var ref;
@@ -427,20 +445,24 @@ var util = require('util');
 
             var out = [];
             for (i = 0; i < initArrays.length; i++) {
-                out.push(initArrays[i].get());
+                var x = initArrays[i].get();
+                for(var j=0; j < x.references.length; j++) {
+                    delete x.references[j].loc;
+                }
+                out.push(x);
             }
             console.log(JSON.stringify(out));
-
         };
 
         this.conditional = function(iid, result) {
             callStack.push("conditional");
             if (verbose) {
-                console.log("conditional:", iid, result);
+                console.log("conditional:");
             }
-            if (inCondBranch == 0) {
-                inCondBranch = 1;
+            if (inCondBranchFunc == 0) {
+                inCondBranchFunc = 1;
             }
+            conditionalLevel++;
         };
 
         this.functionEnter = function(iid, f, dis, args) {
@@ -448,18 +470,18 @@ var util = require('util');
             if (verbose) {
                 console.log("functionEnter:", iid);
             }
-            if (inCondBranch > 0) {
-                inCondBranch++;
+            if (inCondBranchFunc > 0) {
+                inCondBranchFunc++;
             }
         };
 
         this.functionExit = function(iid, returnVal, wrappedExceptionVal) {
             callStack.push("functionExit");
             if (verbose) {
-                console.log("functionExit:", iid, returnVal, wrappedExceptionVal);
+                console.log("functionExit:");
             }
-            if (inCondBranch > 0) {
-                inCondBranch--;
+            if (inCondBranchFunc > 0) {
+                inCondBranchFunc--;
             }
         }
     }
