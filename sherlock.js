@@ -7,13 +7,11 @@ var util = require('util');
     function Sherlock () {
 
         var inCondBranchFunc = 0;
-        var inCondBranchLiteral = 0;
 
         var conditionalLevel = 0;
 
-        var logLevel = 2;
-        var verbose = false;
-        var debug = false;
+        var verbose = false; // verbose mode
+        var debug = false; // debug mode
 
         var callStack = [];
         var checkLengthToLock = null;
@@ -258,23 +256,16 @@ var util = require('util');
             }
             var ref;
             if ((ref = getRef(base))) {
-                /*if (val instanceof Function) {
-                    if (debug) {
-                        console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
-                    }
-                    ref.lock(offset);
-                } else {*/
-                    if (val instanceof Function) {
-                        val = "[Function]";
-                    }
-                    if (base instanceof Array && offset >= 0) {
-                        // check if return value of function is assigned
-                        lastPut = {ref: ref, offset: offset, val: val};
-                    } else if (base instanceof Object) {
-                        lastPut = {ref: ref, offset: offset, val: val};
+                if (val instanceof Function) {
+                    val = "[Function]";
+                }
+                if (base instanceof Array && offset >= 0) {
+                    // check if return value of function is assigned
+                    lastPut = {ref: ref, offset: offset, val: val};
+                } else if (base instanceof Object) {
+                    lastPut = {ref: ref, offset: offset, val: val};
 
-                    }
-                //}
+                }
             }
         };
 
@@ -454,7 +445,6 @@ var util = require('util');
         };
 
         this.conditional = function(iid, result) {
-            console.log('conditional');
             callStack.push("conditional");
             if (verbose) {
                 console.log("conditional:");

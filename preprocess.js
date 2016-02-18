@@ -15,6 +15,9 @@ function createDummyLiteral() {
 }
 
 function countLogicalExpressions(node) {
+  if (node === null) {
+    return -1;
+  }
   if(node.type === 'LogicalExpression') {
     return 1 + countLogicalExpressions(node.left) + countLogicalExpressions(node.right)
   } else {
@@ -32,13 +35,17 @@ function createBlock(content) {
 function addStatementInBlock(parent, nodeBefore, added, cnt) {
   var i;
   if (nodeBefore !== null) {
-    for (i = 0; i < parent.body.length; i++) {
-      if (parent.body[i] == nodeBefore) {
+    var container = "body";
+    if(parent.type === 'SwitchCase') {
+      container = "consequent";
+    }
+    for (i = 0; i < parent[container].length; i++) {
+      if (parent[container][i] == nodeBefore) {
         break;
       }
     }
     for (; cnt > 0; cnt--) {
-      parent.body.splice(i + 1, 0, added);
+      parent[container].splice(i + 1, 0, added);
     }
   } else {
     if (!(parent.body.body instanceof Array)) {
@@ -52,10 +59,18 @@ function addStatementInBlock(parent, nodeBefore, added, cnt) {
 
 var filename = process.argv[2];
 console.log('Processing', filename);
-var ast = esprima.parse(fs.readFileSync(filename));
+var ast = esprima.parse(fs.readFileSync(filename), {attachComments: true});
 
 estraverse.traverse(ast, {
   enter: function(node) {
+    if(node.type === 'IfStatement') {
+      if(node.alternate && node.alternate.type !== 'BlockStatement') {
+        node.alternate = createBlock(node.alternate)
+      }
+      if(node.consequent && node.consequent.type !== 'BlockStatement') {
+        node.consequent = createBlock(node.consequent)
+      }
+    }
     if(node.type === 'ForStatement' || node.type === 'WhileStatement') {
       addStatementInBlock(node, null, createDummyLiteral(), countLogicalExpressions(node.test) + 1)
     }
