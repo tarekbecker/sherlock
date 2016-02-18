@@ -14,6 +14,17 @@ function createDummyLiteral() {
   }
 }
 
+function countLogicalExpressions(node) {
+  if (node === null) {
+    return -1;
+  }
+  if(node.type === 'LogicalExpression') {
+    return 1 + countLogicalExpressions(node.left) + countLogicalExpressions(node.right)
+  } else {
+    return 0;
+  }
+}
+
 function createBlock(content) {
   return {
     type: 'BlockStatement',
@@ -21,38 +32,54 @@ function createBlock(content) {
   };
 }
 
-function addStatementInBlock(parent, nodeBefore, added) {
+function addStatementInBlock(parent, nodeBefore, added, cnt) {
+  var i;
   if (nodeBefore !== null) {
-    var i = 0;
-    for (; i < parent.body.length; i++) {
-      if (parent.body[i] == nodeBefore) {
+    var container = "body";
+    if(parent.type === 'SwitchCase') {
+      container = "consequent";
+    }
+    for (i = 0; i < parent[container].length; i++) {
+      if (parent[container][i] == nodeBefore) {
         break;
       }
     }
-    parent.body.splice(i + 1, 0, added);
+    for (; cnt > 0; cnt--) {
+      parent[container].splice(i + 1, 0, added);
+    }
   } else {
     if (!(parent.body.body instanceof Array)) {
       parent.body = createBlock(parent.body)
     }
-    parent.body.body.push(added);
+    for (; cnt > 0; cnt--) {
+      parent.body.body.push(added);
+    }
   }
 }
 
 var filename = process.argv[2];
 console.log('Processing', filename);
-var ast = esprima.parse(fs.readFileSync(filename));
+var ast = esprima.parse(fs.readFileSync(filename), {attachComments: true});
 
 estraverse.traverse(ast, {
   enter: function(node) {
+    if(node.type === 'IfStatement') {
+      if(node.alternate && node.alternate.type !== 'BlockStatement') {
+        node.alternate = createBlock(node.alternate)
+      }
+      if(node.consequent && node.consequent.type !== 'BlockStatement') {
+        node.consequent = createBlock(node.consequent)
+      }
+    }
     if(node.type === 'ForStatement' || node.type === 'WhileStatement') {
-      addStatementInBlock(node, null, createDummyLiteral())
+      addStatementInBlock(node, null, createDummyLiteral(), countLogicalExpressions(node.test) + 1)
     }
   },
   leave: function(node, parent) {
     if(node.type === 'IfStatement' || node.type === 'WhileStatement') {
-      addStatementInBlock(parent, node, createDummyLiteral())
+      addStatementInBlock(parent, node, createDummyLiteral(), countLogicalExpressions(node.test) + 1)
     } else if(node.type === 'ForStatement') {
-      addStatementInBlock(parent, node, createDummyLiteral())
+      addStatementInBlock(parent, node, createDummyLiteral(), countLogicalExpressions(node.test) + 1)
     }
   }
 });

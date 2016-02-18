@@ -7,17 +7,15 @@ var util = require('util');
     function Sherlock () {
 
         var inCondBranchFunc = 0;
-        var inCondBranchLiteral = 0;
 
         var conditionalLevel = 0;
 
-        var logLevel = 2;
-        var verbose = false;
-        var debug = false;
+        var verbose = false; // verbose mode
+        var debug = false; // debug mode
 
         var callStack = [];
         var checkLengthToLock = null;
-        var lastPutField = null;
+        var lastPut = null;
 
         var refInCond = [];
 
@@ -45,7 +43,7 @@ var util = require('util');
             return result;
         }
 
-        function ArrayReference(base, name, iid) {
+        function Reference(base, name, iid) {
             //var optVer = JSON.parse(JSON.stringify(base));
             var optVer = copy(base);
             var isOpt = false;
@@ -81,7 +79,7 @@ var util = require('util');
 
             /**
              * Checks if a given index of the reference is blocked. If the reference is null
-             * it will just check if the full element is not blocked and it's not in a
+             * it will just check if the full reference is not blocked and it's not in a
              * conditional branch right now
              *
              * @param index the index that should be checked, either an int for arrays, any
@@ -185,8 +183,7 @@ var util = require('util');
              */
             this.addRef = function(name, iid) {
                 references.push({
-                    name: name,
-                    loc: iidToLocation(iid)
+                    name: name
                 });
             };
 
@@ -196,14 +193,14 @@ var util = require('util');
 
             /**
              * Lock a value of a reference by it's index
-             * @param num index that should be logged, if num === undefined
+             * @param index index that should be logged, if num === undefined
              * or (num === "length" && isArray()) the total element will be locked
              */
-            this.lock = function(num) {
-                if (num === undefined || (num === "length" && isArray())) {
+            this.lock = function(index) {
+                if (index === undefined || (index === "length" && isArray())) {
                     locked = true;
                 } else {
-                    lockedValues[num] = true;
+                    lockedValues[index] = true;
                 }
             };
 
@@ -242,12 +239,12 @@ var util = require('util');
             this.addRef(name, iid);
         }
 
-        var initArrays = [];
+        var allRefs = [];
 
         var getRef = function(base) {
-            for(var i = 0; i < initArrays.length; i++) {
-                if (initArrays[i].equals(base)) {
-                    return initArrays[i];
+            for(var i = 0; i < allRefs.length; i++) {
+                if (allRefs[i].equals(base)) {
+                    return allRefs[i];
                 }
             }
         };
@@ -259,18 +256,15 @@ var util = require('util');
             }
             var ref;
             if ((ref = getRef(base))) {
+                if (val instanceof Function) {
+                    val = "[Function]";
+                }
                 if (base instanceof Array && offset >= 0) {
                     // check if return value of function is assigned
-                    lastPutField = {ref: ref, offset: offset, val: val};
+                    lastPut = {ref: ref, offset: offset, val: val};
                 } else if (base instanceof Object) {
-                    if (val instanceof Function) {
-                        if (debug) {
-                            console.log("Assigned function to " + ref.getReferences() + "[" + offset + "]. Lock that value");
-                        }
-                        ref.lock(offset);
-                    } else {
-                        lastPutField = {ref: ref, offset: offset, val: val};
-                    }
+                    lastPut = {ref: ref, offset: offset, val: val};
+
                 }
             }
         };
@@ -286,12 +280,12 @@ var util = require('util');
                     console.log("Add reference " + name + " at " + iidToLocation(iid));
                 }
                 ref.addRef(name, iid);
-            } else if (val instanceof Array || val instanceof Object) {
+            } else if (val instanceof Array || (val instanceof Object && !(val instanceof Function))) {
                 if (debug) {
                     console.log("Create reference " + name + " at " + iidToLocation(iid));
                 }
-                ref = new ArrayReference(val, name, iid);
-                initArrays.push(ref);
+                ref = new Reference(val, name, iid);
+                allRefs.push(ref);
             }
             if (ref && callStack[0] == "functionExit") {
                 ref.lock();
@@ -401,32 +395,32 @@ var util = require('util');
                             checkLengthToLock.lock();
                             callStack = [];
                             checkLengthToLock = null;
-                            lastPutField = null;
+                            lastPut = null;
                             return;
                         }
                     }
                 }
-                if (lastPutField !== null) {
-                    lastPutField.ref.update(lastPutField.offset, lastPutField.val);
+                if (lastPut !== null) {
+                    lastPut.ref.update(lastPut.offset, lastPut.val);
                 }
-            } else if (lastPutField !== null) {
+            } else if (lastPut !== null) {
                 var functionExitFound = false;
                 for (i = 0; i <= callStack.length; i++) {
                     if (callStack[i] === "functionExit") {
                         functionExitFound = true;
-                        lastPutField.ref.lock(lastPutField.offset);
+                        lastPut.ref.lock(lastPut.offset);
                         // lock
                         callStack = [];
                         checkLengthToLock = null;
-                        lastPutField = null;
+                        lastPut = null;
                         return;
                     }
                 }
-                lastPutField.ref.update(lastPutField.offset, lastPutField.val);
+                lastPut.ref.update(lastPut.offset, lastPut.val);
             }
             callStack = [];
             checkLengthToLock = null;
-            lastPutField = null;
+            lastPut = null;
         };
 
         this.endExecution = function() {
@@ -439,17 +433,13 @@ var util = require('util');
                 console.log();
                 console.log("----------------------------------");
             }
-            for (var i = 0; i < initArrays.length; i++) {
-                initArrays[i].debug();
+            for (var i = 0; i < allRefs.length; i++) {
+                allRefs[i].debug();
             }
 
             var out = [];
-            for (i = 0; i < initArrays.length; i++) {
-                var x = initArrays[i].get();
-                for(var j=0; j < x.references.length; j++) {
-                    delete x.references[j].loc;
-                }
-                out.push(x);
+            for (i = 0; i < allRefs.length; i++) {
+                out.push(allRefs[i].get());
             }
             console.log(JSON.stringify(out));
         };

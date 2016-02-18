@@ -1,0 +1,24 @@
+[
+  {
+    "isOptimized": true,
+    "optimizedVersion": {
+      "x": "[Function]"
+    },
+    "references": [
+      {
+        "name": "a"
+      }
+    ]
+  },
+  {
+    "isOptimized": true,
+    "optimizedVersion": [
+      "[Function]"
+    ],
+    "references": [
+      {
+        "name": "b"
+      }
+    ]
+  }
+]
